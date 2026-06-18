@@ -30,8 +30,8 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
 
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-lg' : 'bg-transparent'}`}>
-      <div className="w-full flex items-center justify-between h-20 px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 2xl:px-40">
-        <Link to="/" className="text-xl font-bold gradient-text">
+      <div className="w-full flex items-center justify-between h-20 px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 2xl:px-35">
+        <Link to="/" className="text-xl font-bold uppercase gradient-text">
           Sujeet Sharma
         </Link>
 

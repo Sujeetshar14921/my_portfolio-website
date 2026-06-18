@@ -21,7 +21,7 @@ export default function Footer() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <h3 className="text-lg font-bold text-surface-900 dark:text-white mb-3">
+              <h3 className="text-lg font-bold uppercase text-surface-900 dark:text-white mb-3">
                 Sujeet Sharma
               </h3>
               <p className="text-sm text-surface-500 dark:text-surface-400 leading-relaxed">
@@ -69,7 +69,7 @@ export default function Footer() {
               </span>
               <div className="flex flex-col gap-3">
                 <a
-                  href="https://github.com/alexmorgan"
+                  href="https://github.com/Sujeetshar14921"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
@@ -77,7 +77,7 @@ export default function Footer() {
                   <GitHubIcon size={14} /> GitHub
                 </a>
                 <a
-                  href="https://linkedin.com/in/alexmorgan"
+                  href="https://www.linkedin.com/in/sujeet-sharma-13090326b"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
@@ -85,7 +85,7 @@ export default function Footer() {
                   <LinkedInIcon size={14} /> LinkedIn
                 </a>
                 <a
-                  href="mailto:alex@alexmorgan.dev"
+                  href="mailto:sujeetsharmadc56@gmail.com"
                   className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
                 >
                   <Mail size={14} /> Email
