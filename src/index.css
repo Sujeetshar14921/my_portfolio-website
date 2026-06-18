@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 transparent;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    @apply bg-surface-50 text-surface-900;
+  }
+  .dark body {
+    @apply bg-surface-950 text-surface-100;
+  }
+}
+
+@layer utilities {
+  .gradient-text {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, #3b82f6, #10b981);
+  }
+
+  .gradient-bg {
+    background-image: linear-gradient(135deg, #2563eb, #059669);
+  }
+
+  .gradient-bg-subtle {
+    background-image: linear-gradient(135deg, #eff6ff, #ecfdf5);
+  }
+
+  .dark .gradient-bg-subtle {
+    background-image: linear-gradient(135deg, #172554, #022c22);
+  }
+
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20;
+  }
+
+  .dark .glass {
+    @apply bg-surface-900/70 border-surface-700/30;
+  }
+
+  .card-hover {
+    @apply transition-all duration-300 hover:shadow-xl hover:-translate-y-1;
+  }
+
+  .section-padding {
+    @apply px-6 py-20 md:px-12 lg:py-28;
+  }
+
+  .container-width {
+    @apply max-w-6xl mx-auto;
+  }
+}
+
+@layer components {
+  .prose-custom h1 { @apply text-3xl font-bold mb-4 text-surface-900 dark:text-surface-50; }
+  .prose-custom h2 { @apply text-2xl font-bold mb-3 text-surface-800 dark:text-surface-100; }
+  .prose-custom h3 { @apply text-xl font-semibold mb-2 text-surface-700 dark:text-surface-200; }
+  .prose-custom p  { @apply mb-4 leading-relaxed text-surface-600 dark:text-surface-400; }
+  .prose-custom a  { @apply text-primary-600 dark:text-primary-400 underline hover:no-underline; }
+  .prose-custom ul { @apply list-disc pl-6 mb-4 space-y-1 text-surface-600 dark:text-surface-400; }
+  .prose-custom ol { @apply list-decimal pl-6 mb-4 space-y-1 text-surface-600 dark:text-surface-400; }
+  .prose-custom blockquote { @apply border-l-4 border-primary-500 pl-4 italic my-4 text-surface-500 dark:text-surface-400; }
+  .prose-custom code { @apply bg-surface-100 dark:bg-surface-800 px-1.5 py-0.5 rounded text-sm font-mono; }
+  .prose-custom pre { @apply bg-surface-900 dark:bg-surface-800 p-4 rounded-lg overflow-x-auto mb-4; }
+  .prose-custom pre code { @apply bg-transparent p-0; }
+  .prose-custom img { @apply rounded-lg my-4 max-w-full; }
+  .prose-custom hr  { @apply border-surface-200 dark:border-surface-700 my-8; }
+}
+
+
+@keyframes gradientMove {
+  0% {
+    background-position: 0% 50%;
+  }
+
+  50% {
+    background-position: 100% 50%;
+  }
+
+  100% {
+    background-position: 0% 50%;
+  }
+}
