@@ -33,7 +33,7 @@ export default function ContactSection({ profile }: ContactProps) {
 
   return (
     <section id="contact" className="section-padding">
-      <div className="w-full px-6 md:px-12 lg:px-20">
+      <div className="w-full md:px-12 lg:px-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

@@ -24,7 +24,7 @@ export default function ProjectsSection({ projects }: ProjectsProps) {
 
   return (
     <section id="projects" className="section-padding">
-      <div className="w-full px-6 md:px-12 lg:px-20">
+      <div className="w-full md:px-12 lg:px-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -34,7 +34,7 @@ export default function ProjectsSection({ projects }: ProjectsProps) {
           <span className="block text-xs font-mono uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400 mb-3">
             / Projects
           </span>
-          <h2 className="text-3xl md:text-4xl font-bold text-surface-900 dark:text-white">
+          <h2 className="text-3xl md:text-4xl font-bold text-surface-900 dark:text-white whitespace-nowrap">
             Featured Projects
           </h2>
           <p className="mt-4 text-surface-500 dark:text-surface-400 max-w-xl">

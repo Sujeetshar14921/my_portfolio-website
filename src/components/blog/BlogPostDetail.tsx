@@ -38,7 +38,7 @@ export default function BlogPostDetail({ posts }: BlogPostDetailProps) {
 
   return (
     <div className="pt-24 section-padding">
-      <div className="w-full px-6 md:px-12 lg:px-20">
+      <div className="w-full md:px-12 lg:px-20">
         <Link
           to="/blog"
           className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-surface-400 dark:text-surface-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors mb-10"

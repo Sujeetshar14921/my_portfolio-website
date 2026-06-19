@@ -30,7 +30,7 @@ export default function SkillsSection({ skills }: SkillsProps) {
       id="skills"
       className="section-padding bg-white dark:bg-surface-950 transition-colors duration-300"
     >
-      <div className="w-full px-6 md:px-12 lg:px-20">
+      <div className="w-full md:px-12 lg:px-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}

@@ -12,7 +12,7 @@ export default function Footer() {
   return (
     <footer className="w-full bg-white dark:bg-surface-950 border-t border-surface-200 dark:border-white/10 transition-colors duration-300">
       <div className="px-6 md:px-12 py-16">
-        <div className="w-full px-6 md:px-12 lg:px-20">
+        <div className="w-full md:px-12 lg:px-20">
           {/* Main content grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             {/* Brand */}
