@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+html {
+  scroll-behavior: smooth;
+}
+
+body,
+a,
+button,
+input,
+textarea,
+[role="button"] {
+  cursor: none !important;
+}
+
 @layer base {
   * {
     scrollbar-width: thin;

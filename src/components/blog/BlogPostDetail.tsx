@@ -52,7 +52,7 @@ export default function BlogPostDetail({ posts }: BlogPostDetailProps) {
           animate={{ opacity: 1, y: 0 }}
           className="overflow-hidden mb-10 border border-surface-200 dark:border-white/10"
         >
-          <img src={post.cover_image} alt={post.title} className="w-full aspect-video object-cover" />
+          <img src={post.cover_image} alt={post.title} loading="lazy" className="w-full aspect-video object-cover" />
         </motion.div>
 
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}>

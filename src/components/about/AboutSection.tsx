@@ -83,6 +83,7 @@ export default function AboutSection({ profile }: AboutProps) {
             <img
               src={profile?.photo_url || 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=800'}
               alt={profile?.name || 'Alex Morgan'}
+              loading="lazy"
               className="w-full h-full object-cover border border-surface-200 dark:border-white/10"
             />
           </div>

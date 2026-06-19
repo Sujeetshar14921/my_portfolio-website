@@ -47,7 +47,7 @@ export default function ProjectDetail({ projects }: ProjectDetailProps) {
           animate={{ opacity: 1, y: 0 }}
           className="overflow-hidden mb-10 border border-surface-200 dark:border-white/10"
         >
-          <img src={project.image_url} alt={project.title} className="w-full aspect-video object-cover" />
+          <img src={project.image_url} alt={project.title} loading="lazy" className="w-full aspect-video object-cover" />
         </motion.div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">

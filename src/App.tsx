@@ -18,8 +18,10 @@ import AdminSkills from '@/components/admin/AdminSkills';
 import AdminLeads from '@/components/admin/AdminLeads';
 import AdminProfile from '@/components/admin/AdminProfile';
 import AdminTestimonials from '@/components/admin/AdminTestimonials';
+import Cursor from '@/components/cursor/Cursor';
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -56,6 +58,7 @@ function TrackPageView() {
 export default function App() {
   return (
     <BrowserRouter>
+    <Cursor />
       <AuthProvider>
         <ScrollToTop />
         <TrackPageView />
