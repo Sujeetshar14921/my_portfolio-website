@@ -44,6 +44,7 @@ export interface Project {
   description: string;
   full_description: string;
   image_url: string;
+  pdf_url?: string;
   screenshots: string[];
   tech_stack: string[];
   category: string;
@@ -66,6 +67,7 @@ export interface BlogPost {
   slug: string;
   excerpt: string;
   content: string;
+  content_type?: 'html' | 'markdown';
   cover_image: string;
   tags: string[];
   read_time: number;

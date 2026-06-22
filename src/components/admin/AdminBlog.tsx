@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BlogPost } from '@/types';
-import { Plus, Pencil, Trash2, X, Eye } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Eye, Code, FileText } from 'lucide-react';
 import ImageUpload from '@/components/ui/ImageUpload';
 
 const emptyPost: Partial<BlogPost> = {
-  title: '', slug: '', excerpt: '', content: '', cover_image: '', tags: [], published: false, read_time: 5,
+  title: '', slug: '', excerpt: '', content: '', content_type: 'html', cover_image: '', tags: [], published: false, read_time: 5,
 };
 
 export default function AdminBlog() {
@@ -14,6 +14,7 @@ export default function AdminBlog() {
   const [editing, setEditing] = useState<Partial<BlogPost> | null>(null);
   const [saving, setSaving] = useState(false);
   const [tagInput, setTagInput] = useState('');
+  const [previewHtml, setPreviewHtml] = useState(false);
 
   const load = async () => {
     const { data } = await supabase.from('blog_posts').select('*').order('created_at', { ascending: false });
@@ -33,6 +34,7 @@ export default function AdminBlog() {
       ...editing,
       slug: editing.slug || slugify(editing.title || ''),
       tags: editing.tags || [],
+      content_type: editing.content_type || 'html',
       published_at: editing.published && !editing.published_at ? new Date().toISOString() : editing.published_at,
     };
 
@@ -122,14 +124,71 @@ export default function AdminBlog() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Content (Markdown)</label>
-                <textarea value={editing.content || ''} onChange={e => setEditing(p => p ? { ...p, content: e.target.value } : p)} rows={12} className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 text-sm font-mono outline-none focus:ring-2 focus:ring-primary-500 resize-y" />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium">Content</label>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEditing(p => p ? { ...p, content_type: 'html' } : p)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                        editing.content_type === 'html'
+                          ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                          : 'text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-700'
+                      }`}
+                    >
+                      <Code size={14} /> HTML
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditing(p => p ? { ...p, content_type: 'markdown' } : p)}
+                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                        editing.content_type === 'markdown'
+                          ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
+                          : 'text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-700'
+                      }`}
+                    >
+                      <FileText size={14} /> Markdown
+                    </button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setPreviewHtml(!previewHtml)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      previewHtml
+                        ? 'bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300'
+                        : 'text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-700'
+                    }`}
+                  >
+                    <Eye size={14} /> {previewHtml ? 'Hide Preview' : 'Show Preview'}
+                  </button>
+                  {editing.content_type === 'html' && (
+                    <span className="text-xs text-surface-400">Supports images, links, formatting</span>
+                  )}
+                </div>
+                <textarea
+                  value={editing.content || ''}
+                  onChange={e => setEditing(p => p ? { ...p, content: e.target.value } : p)}
+                  rows={12}
+                  className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 text-sm font-mono outline-none focus:ring-2 focus:ring-primary-500 resize-y"
+                  placeholder={editing.content_type === 'html' ? '<h2>Title</h2>\n<p>Your content here...</p>\n<img src="..." alt="" />\n<a href="...">Link</a>' : 'Markdown content...'}
+                />
+                {previewHtml && editing.content && (
+                  <div className="mt-3 p-4 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 prose prose-sm dark:prose-invert max-w-none overflow-auto">
+                    {editing.content_type === 'html' ? (
+                      <div dangerouslySetInnerHTML={{ __html: editing.content }} />
+                    ) : (
+                      <div className="whitespace-pre-wrap">{editing.content}</div>
+                    )}
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4 items-start">
                 <ImageUpload
                   value={editing.cover_image || ''}
-                  onChange={(url: string) => setEditing(p => p ? { ...p, cover_image: url } : p)}
+                  onChange={url => setEditing(p => p ? { ...p, cover_image: url } : p)}
                   folder="blog"
                   label="Cover Image"
                   aspectClass="aspect-video"

@@ -31,7 +31,18 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-lg' : 'bg-transparent'}`}>
       <div className="w-full flex items-center justify-between h-20 px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 2xl:px-35">
-        <Link to="/" className="text-xl font-bold uppercase gradient-text">
+        <Link
+          to="/"
+          className="uppercase font-black tracking-tight transition-all bg-primary-600 px-2 py-1 duration-300 hover:scale-105"
+          style={{
+            fontFamily: "'Clash Display', 'Sora', sans-serif",
+            color: "transparent",
+            WebkitTextStroke: "1.2px rgba(255,255,255,0.9)",
+            textShadow: "0 0 10px rgba(59,130,246,0.15)",
+            letterSpacing: "-0.02em",
+            fontSize: "1.25rem",
+          }}
+        >
           Sujeet Sharma
         </Link>
 
@@ -41,9 +52,8 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
             <Link
               key={link.to}
               to={link.to}
-              className={`text-sm font-medium transition-colors hover:text-primary-600 dark:hover:text-primary-400 ${
-                location.pathname === link.to ? 'text-primary-600 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400'
-              }`}
+              className={`text-sm font-medium transition-colors hover:text-primary-600 dark:hover:text-primary-400 ${location.pathname === link.to ? 'text-primary-600 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400'
+                }`}
             >
               {link.label}
             </Link>
@@ -90,9 +100,8 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`text-sm font-medium transition-colors ${
-                    location.pathname === link.to ? 'text-primary-600 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400'
-                  }`}
+                  className={`text-sm font-medium transition-colors ${location.pathname === link.to ? 'text-primary-600 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400'
+                    }`}
                 >
                   {link.label}
                 </Link>

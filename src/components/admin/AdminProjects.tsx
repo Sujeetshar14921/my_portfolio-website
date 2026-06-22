@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Project } from '@/types';
-import { Plus, Pencil, Trash2, X, ExternalLink } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, ExternalLink, FileText } from 'lucide-react';
 import ImageUpload from '@/components/ui/ImageUpload';
+import FileUpload from '@/components/ui/FileUpload';
 
 const emptyProject: Partial<Project> = {
-  title: '', slug: '', description: '', full_description: '', image_url: '', tech_stack: [], category: 'fullstack', demo_url: '', github_url: '', featured: false, case_study: false, case_problem: '', case_approach: '', case_result: '', published: true,
+  title: '', slug: '', description: '', full_description: '', image_url: '', pdf_url: '', tech_stack: [], category: 'fullstack', demo_url: '', github_url: '', featured: false, case_study: false, case_problem: '', case_approach: '', case_result: '', published: true,
 };
 
 export default function AdminProjects() {
@@ -141,6 +142,19 @@ export default function AdminProjects() {
                     <option value="ai">AI / ML</option>
                     <option value="mobile">Mobile</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 items-start">
+                <FileUpload
+                  value={editing.pdf_url || ''}
+                  onChange={url => setEditing(p => p ? { ...p, pdf_url: url } : p)}
+                  folder="projects/pdfs"
+                  label="Project PDF (Optional)"
+                  fileType="pdf"
+                />
+                <div className="flex items-end">
+                  <p className="text-xs text-surface-500">Upload project documentation, case study, or detailed specs as PDF</p>
                 </div>
               </div>
 
