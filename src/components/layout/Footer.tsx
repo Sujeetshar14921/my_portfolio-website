@@ -3,6 +3,7 @@ import { Mail, ArrowUp } from 'lucide-react';
 import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
+import LoopSlider from '../ui/LoopSlider';
 
 export default function Footer() {
   const [scrollHover, setScrollHover] = useState(false);
@@ -11,7 +12,7 @@ export default function Footer() {
 
   return (
     <footer className="w-full bg-white dark:bg-surface-950 border-t border-surface-200 dark:border-white/10 transition-colors duration-300">
-      <div className="px-6 md:px-12 py-16">
+      <div className="px-6 md:px-12 py-6">
         <div className="w-full md:px-12 lg:px-20">
           {/* Main content grid */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
@@ -133,7 +134,7 @@ export default function Footer() {
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
-            className="flex flex-col md:flex-row md:items-center md:justify-between gap-6"
+            className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 mb-6"
           >
             <p className="text-xs font-mono text-surface-400 dark:text-surface-500">
               &copy; {new Date().getFullYear()} Sujeet Sharma. All rights reserved.
@@ -155,6 +156,7 @@ export default function Footer() {
               </a>
             </div>
           </motion.div>
+          <LoopSlider />
         </div>
       </div>
     </footer>

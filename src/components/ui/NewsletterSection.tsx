@@ -14,13 +14,13 @@ export default function NewsletterSection() {
   };
 
   return (
-    <section className="section-padding">
-      <div className="w-full md:px-12 lg:px-20">
+    <section className="section-padding ">
+      <div className="w-full md:px-12 lg:px-20 ">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="border border-surface-200 dark:border-white/10 p-8 md:p-12 lg:p-16"
+          className="border border-surface-200 dark:border-white/10 p-8 md:p-12 lg:p-16 "
           style={{
             boxShadow: `
               -3px -3px 0px 0px #FF006E,

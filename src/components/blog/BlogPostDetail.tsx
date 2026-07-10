@@ -16,7 +16,7 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
 
   return (
     <div className="pt-24 section-padding">
-      <div className="w-full md:px-12 lg:px-20">
+      <div className="w-full md:px-12 lg:px-20 ">
         <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-primary-600 mb-8 transition-colors">
           <ArrowLeft size={16} /> Back to Blog
         </Link>

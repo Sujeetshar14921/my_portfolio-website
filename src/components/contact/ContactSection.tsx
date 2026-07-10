@@ -32,7 +32,7 @@ export default function ContactSection({ profile }: ContactProps) {
   };
 
   return (
-    <section id="contact" className="section-padding">
+    <section id="contact" className="section-padding bg-[url('bgImg.svg')] bg-cover bg-center bg-no-repeat">
       <div className="w-full md:px-12 lg:px-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

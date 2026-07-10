@@ -74,7 +74,7 @@ export default function TestimonialsSection({
   );
 
   return (
-    <section className="section-padding overflow-hidden">
+    <section className="section-padding overflow-hidden bg-[url('bgImg.svg')] bg-cover bg-center bg-no-repeat">
       <div className="w-full md:px-12 lg:px-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

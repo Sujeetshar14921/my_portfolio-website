@@ -21,7 +21,6 @@ import AdminTestimonials from '@/components/admin/AdminTestimonials';
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
-
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return <div className="min-h-screen flex items-center justify-center text-surface-400">Loading...</div>;

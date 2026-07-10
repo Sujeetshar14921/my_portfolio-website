@@ -17,7 +17,7 @@ export default function HeroSection({ profile }: HeroProps) {
       <div
         className="absolute inset-0 w-full h-full bg-cover bg-center bg-fixed"
         style={{
-          backgroundImage: `url('bg_pic.jpg')`,
+          backgroundImage: `url('https://images.pexels.com/photos/6757520/pexels-photo-6757520.jpeg')`,
         }}
       />
 
