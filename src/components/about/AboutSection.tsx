@@ -42,7 +42,7 @@ export default function AboutSection({ profile }: AboutProps) {
   const achievements = profile?.achievements || [];
 
   return (
-    <section id="about" className=" relative w-full py-16 bg-[url('./public/bgImg.svg')] bg-cover bg-center bg-no-repeat  ">
+    <section id="about" className=" relative w-full py-16 bg-[url('/public/bgImg.svg')] bg-cover bg-center bg-no-repeat  ">
       <div className="w-full px-6 md:px-12 lg:px-32">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
