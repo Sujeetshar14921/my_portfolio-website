@@ -28,7 +28,7 @@ export default function SkillsSection({ skills }: SkillsProps) {
   return (
     <section
       id="skills"
-      className="section-padding bg-white dark:bg-surface-950 transition-colors duration-300 bg-[url('bgImg.svg')] bg-cover bg-center bg-no-repeat"
+      className="section-padding bg-white dark:bg-surface-950 transition-colors duration-300 bg-[url('/public/bgImg.svg')] bg-cover bg-center bg-no-repeat"
     >
       <div className="w-full md:px-12 lg:px-20">
         <motion.div

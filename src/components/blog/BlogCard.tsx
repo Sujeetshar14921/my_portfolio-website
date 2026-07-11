@@ -19,7 +19,7 @@ export default function BlogCard({ post, index }: BlogCardProps) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
-      className="group bg-white dark:bg-surface-900  overflow-hidden shadow-sm border border-surface-200 dark:border-surface-700 card-hover bg-[url('bgImg.svg')] bg-cover bg-center bg-no-repeat"
+      className="group bg-white dark:bg-surface-900  overflow-hidden shadow-sm border border-surface-200 dark:border-surface-700 card-hover bg-[url('/public/bgImg.svg')] bg-cover bg-center bg-no-repeat"
     >
       <div className="relative overflow-hidden aspect-[16/9]">
         <img
