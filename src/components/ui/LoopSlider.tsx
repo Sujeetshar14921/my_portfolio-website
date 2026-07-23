@@ -20,7 +20,7 @@ export default function LoopSlider() {
             className="mx-8 text-5xl md:text-7xl lg:text-9xl font-black uppercase tracking-wider flex-shrink-0"
           >
             <span className="text-blue-600">AI</span>{" "}
-            <span className="text-gray-600">FULL-STACK DEVELOPER</span>
+            <span className="text-orange-600">FULL-STACK DEVELOPER</span>
           </h2>
         ))}
       </motion.div>
