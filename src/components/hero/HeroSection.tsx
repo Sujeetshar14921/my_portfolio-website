@@ -23,7 +23,7 @@ export default function HeroSection({ profile }: HeroProps) {
 
       {/* Smart Dark Overlay */}
       <div className="absolute inset-0 bg-gradient-to-b from-black/45 via-black/55 to-black/75" />
-      <div 
+      <div
         className="absolute inset-0 pointer-events-none"
         style={{
           backgroundImage: `radial-gradient(ellipse at 50% 50%, rgba(0,0,0,0.1) 0%, rgba(0,0,0,0.1) 100%)`
@@ -44,18 +44,18 @@ export default function HeroSection({ profile }: HeroProps) {
 
         {/* Name - Single Color, Simple */}
         <h1
-  className="uppercase leading-[0.9] text-center mb-6 break-words font-black"
-  style={{
-    fontSize: "clamp(3rem, 8vw, 12rem)",
-    fontFamily: "'Space Grotesk', sans-serif",
-    color: "transparent",
-    WebkitTextStroke: "1.5px rgba(255,255,255,0.8)",
-    letterSpacing: "-0.05em",
-    filter: "drop-shadow(0 0 15px rgba(255,255,255,0.15))",
-  }}
->
-  {profile?.name || "Sujeet Sharma"}
-</h1>
+          className="uppercase leading-[0.9] text-center mb-6 break-words font-black"
+          style={{
+            fontSize: "clamp(3rem, 8vw, 12rem)",
+            fontFamily: "'Space Grotesk', sans-serif",
+            color: "transparent",
+            WebkitTextStroke: "1.5px rgba(255,255,255,0.8)",
+            letterSpacing: "-0.05em",
+            filter: "drop-shadow(0 0 15px rgba(255,255,255,0.15))",
+          }}
+        >
+          {profile?.name || "Sujeet Sharma"}
+        </h1>
         {/* Profession - Single Color */}
         <h2
           className="font-black leading-tight tracking-[-0.03em] text-white text-center mb-10 break-words"
@@ -64,9 +64,17 @@ export default function HeroSection({ profile }: HeroProps) {
             textShadow: "0 8px 25px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.7)",
           }}
         >
-          {profile?.role || "Full Stack Developer"}
+          {(profile?.role || "Full Stack Developer")
+            .split(" ")
+            .map((word, i) => (
+              <span
+                key={i}
+                className={i === 1 ? "text-orange-600" : ""}
+              >
+                {word}{" "}
+              </span>
+            ))}
         </h2>
-
         {/* Tagline */}
         <p
           className="text-center text-white/85 mb-12 max-w-2xl leading-relaxed px-2"

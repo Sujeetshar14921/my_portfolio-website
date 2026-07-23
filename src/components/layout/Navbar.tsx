@@ -33,7 +33,7 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
       <div className="w-full flex items-center justify-between h-20 px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 2xl:px-35">
         <Link
           to="/"
-          className="uppercase font-black tracking-tight transition-all bg-primary-600 px-2 py-1 duration-300 hover:scale-105"
+          className="uppercase font-black tracking-tight transition-all bg-gradient-to-r from-orange-600 from-5% to-primary-600 to-5% px-5 py-1 duration-300 hover:scale-105"
           style={{
             fontFamily: "'Clash Display', 'Sora', sans-serif",
             color: "transparent",
@@ -52,7 +52,7 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
             <Link
               key={link.to}
               to={link.to}
-              className={`text-sm font-medium transition-colors hover:text-primary-600 dark:hover:text-primary-400 ${location.pathname === link.to ? 'text-primary-600 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400'
+              className={`text-sm font-medium transition-colors hover:text-primary-600 dark:hover:text-primary-400 ${location.pathname === link.to ? 'text-orange-600 dark:text-orange-400' : 'text-surface-600 dark:text-surface-400'
                 }`}
             >
               {link.label}

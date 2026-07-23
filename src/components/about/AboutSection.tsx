@@ -60,31 +60,29 @@ export default function AboutSection({ profile }: AboutProps) {
 
         {/* Large Horizontal Photo with Colorful Multi-Layer Border */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          whileInView={{ opacity: 1, scale: 1 }}
+          initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+          whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="mb-14 inline-block w-full"
         >
-          <div
-            className="w-full aspect-[16/9] relative"
-            style={{
-              boxShadow: `
-                -8px -8px 0px 0px #FF006E,
-                -16px -16px 0px 0px #FB5607,
-                -24px -24px 0px 0px #FFBE0B,
-                8px 8px 0px 0px #8338EC,
-                16px 16px 0px 0px #3A86FF,
-                24px 24px 0px 0px #06FFA5,
-                -8px 8px 0px 0px #FF5D00,
-                8px -8px 0px 0px #FF0080
-              `,
-            }}
-          >
+          <div className="relative w-full aspect-[16/9]">
+            {/* Rotated color block behind */}
+            <div
+              className="absolute inset-0 -rotate-2 -z-10"
+              style={{ backgroundColor: "#EA580C" }}
+            />
+            <div
+              className="absolute inset-0 rotate-1 -z-10 translate-x-3 translate-y-3"
+              style={{ backgroundColor: "#3A86FF" }}
+            />
+
+            {/* Main image */}
             <img
               src={profile?.photo_url || 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=800'}
               alt={profile?.name || 'Alex Morgan'}
               loading="lazy"
-              className="w-full h-full object-cover border border-surface-200 dark:border-white/10"
+              className="w-full h-full object-cover border-4 border-white dark:border-surface-900 relative shadow-2xl"
             />
           </div>
         </motion.div>
@@ -94,17 +92,39 @@ export default function AboutSection({ profile }: AboutProps) {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-14 max-w-3xl"
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          className="mb-14 w-full"
         >
-          <h3 className="text-3xl md:text-4xl font-bold text-surface-900 dark:text-white mb-2">
-            {profile?.name || 'Alex Morgan'}
-          </h3>
-          <p className="text-lg text-primary-600 dark:text-primary-400 font-medium mb-6">
-            {profile?.role || 'Full Stack Developer'}
-          </p>
-          <p className="text-surface-600 dark:text-surface-400 leading-relaxed text-base">
-            {profile?.bio || ''}
-          </p>
+          <motion.h3
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="text-3xl md:text-4xl font-bold text-surface-900 dark:text-white mb-2 tracking-tight"
+          >
+            {profile?.name || 'Name Not Found'}
+          </motion.h3>
+
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-lg text-primary-600 dark:text-primary-400 font-medium mb-6 flex items-center gap-2"
+          >
+            <span className="w-6 h-[2px] bg-primary-600 dark:bg-primary-400 inline-block" />
+            {profile?.role || 'Roll Not Found'}
+          </motion.p>
+
+          <motion.p
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="text-surface-600 dark:text-surface-400 leading-relaxed text-base md:text-lg w-full max-w-none"
+          >
+            {profile?.bio || 'Empty Bio'}
+          </motion.p>
         </motion.div>
 
         {/* Achievements Grid */}
