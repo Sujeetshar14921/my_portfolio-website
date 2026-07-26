@@ -1,27 +1,51 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Mail } from 'lucide-react';
+import { Mail, CheckCircle2, AlertCircle, Loader2 } from 'lucide-react';
+import { subscribeToNewsletter, isValidEmail } from '@/lib/newsletter';
+
+type Status = 'idle' | 'loading' | 'success' | 'error';
 
 export default function NewsletterSection() {
   const [email, setEmail] = useState('');
-  const [status, setStatus] = useState<'idle' | 'submitting' | 'subscribed' | 'error'>('idle');
+  const [status, setStatus] = useState<Status>('idle');
+  const [message, setMessage] = useState('');
+  const requestId = useRef(0);
   const prefersReducedMotion = useReducedMotion();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email.trim()) return;
+    if (status === 'loading') return;
 
-    setStatus('submitting');
-
-    try {
-      // TODO: replace with your real newsletter API call
-      // e.g. await fetch('/api/newsletter/subscribe', { method: 'POST', body: JSON.stringify({ email }) });
-      await new Promise(resolve => setTimeout(resolve, 600));
-
-      setStatus('subscribed');
-      setEmail('');
-    } catch {
+    const trimmed = email.trim();
+    if (!isValidEmail(trimmed)) {
       setStatus('error');
+      setMessage('Please enter a valid email address.');
+      return;
+    }
+
+    const currentId = ++requestId.current;
+    setStatus('loading');
+    setMessage('');
+
+    const result = await subscribeToNewsletter(trimmed);
+
+    // Drop stale responses (e.g. user typed again mid-request).
+    if (currentId !== requestId.current) return;
+
+    if (result.ok) {
+      setStatus('success');
+      setMessage(result.message);
+      setEmail('');
+    } else {
+      setStatus('error');
+      setMessage(result.error);
+    }
+  };
+
+  const reset = () => {
+    if (status === 'error') {
+      setStatus('idle');
+      setMessage('');
     }
   };
 
@@ -67,25 +91,32 @@ export default function NewsletterSection() {
               </div>
 
               <div className="w-full lg:w-auto lg:min-w-[340px]">
-                {status === 'subscribed' ? (
+                {status === 'success' ? (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
-                    className="rounded-xl border border-primary-600/30 dark:border-primary-400/30 bg-primary-600/5 dark:bg-primary-400/5 p-4"
+                    role="status"
+                    className="rounded-xl border border-primary-600/30 dark:border-primary-400/30 bg-primary-600/5 dark:bg-primary-400/5 p-4 flex items-start gap-3"
                   >
-                    <p className="text-sm font-medium text-surface-900 dark:text-white">
-                      Thanks for subscribing!
-                    </p>
-                    <p className="text-xs text-surface-400 dark:text-surface-500 mt-1">
-                      You'll hear from me soon.{' '}
-                      <button
-                        type="button"
-                        onClick={() => setStatus('idle')}
-                        className="underline hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                      >
-                        Wrong email?
-                      </button>
-                    </p>
+                    <CheckCircle2 size={20} className="shrink-0 text-primary-600 dark:text-primary-400 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-surface-900 dark:text-white">
+                        Thanks for subscribing!
+                      </p>
+                      <p className="text-xs text-surface-400 dark:text-surface-500 mt-1">
+                        {message}{' '}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setStatus('idle');
+                            setMessage('');
+                          }}
+                          className="underline hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                        >
+                          Wrong email?
+                        </button>
+                      </p>
+                    </div>
                   </motion.div>
                 ) : (
                   <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4" noValidate>
@@ -98,26 +129,43 @@ export default function NewsletterSection() {
                         type="email"
                         required
                         value={email}
-                        onChange={e => setEmail(e.target.value)}
+                        onChange={e => {
+                          setEmail(e.target.value);
+                          reset();
+                        }}
                         placeholder="your@email.com"
-                        disabled={status === 'submitting'}
+                        disabled={status === 'loading'}
+                        aria-invalid={status === 'error'}
+                        aria-describedby={status === 'error' ? 'newsletter-error' : undefined}
                         className="w-full bg-transparent border-b border-surface-200 dark:border-white/10 pb-2.5 text-sm text-surface-900 dark:text-white placeholder:text-surface-400 dark:placeholder:text-surface-600 focus:border-primary-600 dark:focus:border-primary-400 outline-none transition-colors disabled:opacity-50"
                       />
                       {status === 'error' && (
-                        <p className="mt-2 text-xs text-red-500 dark:text-red-400">
-                          Something went wrong. Please try again.
+                        <p
+                          id="newsletter-error"
+                          role="alert"
+                          className="mt-2 text-xs text-red-500 dark:text-red-400 flex items-center gap-1.5"
+                        >
+                          <AlertCircle size={14} className="shrink-0" />
+                          {message}
                         </p>
                       )}
                     </div>
 
                     <motion.button
                       type="submit"
-                      disabled={status === 'submitting'}
-                      whileHover={{ scale: status === 'submitting' ? 1 : 1.02 }}
-                      whileTap={{ scale: status === 'submitting' ? 1 : 0.98 }}
-                      className="px-6 py-2.5 rounded-lg border border-surface-900 dark:border-white text-surface-900 dark:text-white text-xs font-mono uppercase tracking-wider hover:bg-surface-900 hover:text-white dark:hover:bg-white dark:hover:text-surface-900 transition-colors shrink-0 font-bold disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400"
+                      disabled={status === 'loading'}
+                      whileHover={{ scale: status === 'loading' ? 1 : 1.02 }}
+                      whileTap={{ scale: status === 'loading' ? 1 : 0.98 }}
+                      className="px-6 py-2.5 rounded-lg border border-surface-900 dark:border-white text-surface-900 dark:text-white text-xs font-mono uppercase tracking-wider hover:bg-surface-900 hover:text-white dark:hover:bg-white dark:hover:text-surface-900 transition-colors shrink-0 font-bold disabled:opacity-50 disabled:pointer-events-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400 flex items-center justify-center gap-2"
                     >
-                      {status === 'submitting' ? 'Subscribing…' : 'Subscribe'}
+                      {status === 'loading' ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          Subscribing…
+                        </>
+                      ) : (
+                        'Subscribe'
+                      )}
                     </motion.button>
                   </form>
                 )}

@@ -15,6 +15,7 @@ export default function AdminBlog() {
   const [saving, setSaving] = useState(false);
   const [tagInput, setTagInput] = useState('');
   const [previewHtml, setPreviewHtml] = useState(false);
+  const [priorPublished, setPriorPublished] = useState(false);
 
   const load = async () => {
     const { data } = await supabase.from('blog_posts').select('*').order('created_at', { ascending: false });
@@ -38,10 +39,30 @@ export default function AdminBlog() {
       published_at: editing.published && !editing.published_at ? new Date().toISOString() : editing.published_at,
     };
 
+    let savedSlug: string | null = null;
+
     if (editing.id) {
-      await supabase.from('blog_posts').update(payload).eq('id', editing.id);
+      const { data } = await supabase.from('blog_posts').update(payload).eq('id', editing.id).select('slug');
+      savedSlug = data?.[0]?.slug ?? null;
     } else {
-      await supabase.from('blog_posts').insert(payload);
+      const { data } = await supabase.from('blog_posts').insert(payload).select('slug');
+      savedSlug = data?.[0]?.slug ?? null;
+    }
+
+    // Notify verified subscribers when a post is newly published.
+    if (savedSlug && editing.published && (!priorPublished || !editing.id)) {
+      try {
+        await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-newsletter`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ slug: savedSlug }),
+        });
+      } catch {
+        // Newsletter send is best-effort; do not block saving.
+      }
     }
 
     setSaving(false);
@@ -71,7 +92,7 @@ export default function AdminBlog() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Blog Posts</h1>
-        <button onClick={() => setEditing({ ...emptyPost })} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium gradient-bg text-white hover:opacity-90">
+        <button onClick={() => { setPriorPublished(false); setEditing({ ...emptyPost }); }} className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium gradient-bg text-white hover:opacity-90">
           <Plus size={16} /> New Post
         </button>
       </div>
@@ -91,7 +112,7 @@ export default function AdminBlog() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => setEditing({ ...p })} className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"><Pencil size={16} /></button>
+              <button onClick={() => { setPriorPublished(p.published); setEditing({ ...p }); }} className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-700 transition-colors"><Pencil size={16} /></button>
               <button onClick={() => handleDelete(p.id)} className="p-2 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 transition-colors"><Trash2 size={16} /></button>
             </div>
           </div>

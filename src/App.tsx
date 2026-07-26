@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from '@/lib/auth';
+import { ProfileProvider } from '@/lib/profile';
 import { useTheme } from '@/hooks/useTheme';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
@@ -18,6 +19,9 @@ import AdminSkills from '@/components/admin/AdminSkills';
 import AdminLeads from '@/components/admin/AdminLeads';
 import AdminProfile from '@/components/admin/AdminProfile';
 import AdminTestimonials from '@/components/admin/AdminTestimonials';
+import AdminSubscribers from './components/admin/AdminSubscribeers';
+import VerifyEmailPage from '@/pages/VerifyEmailPage';
+import UnsubscribePage from '@/pages/UnsubscribePage';
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -57,32 +61,39 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ScrollToTop />
-        <TrackPageView />
-        <Routes>
-          {/* Public routes */}
-          <Route path="/" element={<Layout><HomePage /></Layout>} />
-          <Route path="/projects" element={<Layout><ProjectsPage /></Layout>} />
-          <Route path="/projects/:slug" element={<Layout><ProjectDetailPage /></Layout>} />
-          <Route path="/blog" element={<Layout><BlogPage /></Layout>} />
-          <Route path="/blog/:slug" element={<Layout><BlogPostPage /></Layout>} />
-          <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+        <ProfileProvider>
+          <ScrollToTop />
+          <TrackPageView />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/" element={<Layout><HomePage /></Layout>} />
+            <Route path="/projects" element={<Layout><ProjectsPage /></Layout>} />
+            <Route path="/projects/:slug" element={<Layout><ProjectDetailPage /></Layout>} />
+            <Route path="/blog" element={<Layout><BlogPage /></Layout>} />
+            <Route path="/blog/:slug" element={<Layout><BlogPostPage /></Layout>} />
+            <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
 
-          {/* Admin routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
-            <Route index element={<AdminDashboard />} />
-            <Route path="projects" element={<AdminProjects />} />
-            <Route path="blog" element={<AdminBlog />} />
-            <Route path="skills" element={<AdminSkills />} />
-            <Route path="leads" element={<AdminLeads />} />
-            <Route path="profile" element={<AdminProfile />} />
-            <Route path="testimonials" element={<AdminTestimonials />} />
-          </Route>
+            {/* Newsletter public actions */}
+            <Route path="/newsletter/verify" element={<VerifyEmailPage />} />
+            <Route path="/newsletter/unsubscribe" element={<UnsubscribePage />} />
 
-          {/* Fallback */}
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            {/* Admin routes */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+              <Route index element={<AdminDashboard />} />
+              <Route path="projects" element={<AdminProjects />} />
+              <Route path="blog" element={<AdminBlog />} />
+              <Route path="skills" element={<AdminSkills />} />
+              <Route path="leads" element={<AdminLeads />} />
+              <Route path="subscribers" element={<AdminSubscribers />} />
+              <Route path="profile" element={<AdminProfile />} />
+              <Route path="testimonials" element={<AdminTestimonials />} />
+            </Route>
+
+            {/* Fallback */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </ProfileProvider>
       </AuthProvider>
     </BrowserRouter>
   );

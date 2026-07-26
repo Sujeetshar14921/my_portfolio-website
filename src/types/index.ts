@@ -106,3 +106,13 @@ export interface PageView {
   referrer: string;
   created_at: string;
 }
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  verified: boolean;
+  verification_token: string;
+  unsubscribe_token: string;
+  created_at: string;
+  updated_at: string;
+}

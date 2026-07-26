@@ -3,7 +3,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth';
 import {
   LayoutDashboard, FolderKanban, FileText, Tags, Users,
-  LogOut, ArrowLeft, User, Star, Menu, X,
+  LogOut, ArrowLeft, User, Star, Menu, X, Mail,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
@@ -15,6 +15,7 @@ const navItems = [
   { to: '/admin/skills', icon: Tags, label: 'Skills' },
   { to: '/admin/testimonials', icon: Star, label: 'Testimonials' },
   { to: '/admin/leads', icon: Users, label: 'Leads' },
+  { to: '/admin/subscribers', icon: Mail, label: 'Subscribers' },
 ];
 
 export default function AdminLayout() {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { FolderKanban, FileText, Tags, Users, Eye } from 'lucide-react';
+import { FolderKanban, FileText, Tags, Users, Eye, Mail } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Stats {
@@ -10,21 +10,23 @@ interface Stats {
   leads: number;
   newLeads: number;
   pageViews: number;
+  subscribers: number;
 }
 
 export default function AdminDashboard() {
-  const [stats, setStats] = useState<Stats>({ projects: 0, posts: 0, skills: 0, leads: 0, newLeads: 0, pageViews: 0 });
+  const [stats, setStats] = useState<Stats>({ projects: 0, posts: 0, skills: 0, leads: 0, newLeads: 0, pageViews: 0, subscribers: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadStats() {
-      const [projects, posts, skills, leads, newLeads, pageViews] = await Promise.all([
+      const [projects, posts, skills, leads, newLeads, pageViews, subscribers] = await Promise.all([
         supabase.from('projects').select('id', { count: 'exact', head: true }),
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }),
         supabase.from('skills').select('id', { count: 'exact', head: true }),
         supabase.from('contact_submissions').select('id', { count: 'exact', head: true }),
         supabase.from('contact_submissions').select('id', { count: 'exact', head: true }).eq('status', 'new'),
         supabase.from('page_views').select('id', { count: 'exact', head: true }),
+        supabase.from('newsletter_subscribers').select('id', { count: 'exact', head: true }).eq('verified', true),
       ]);
 
       setStats({
@@ -34,6 +36,7 @@ export default function AdminDashboard() {
         leads: leads.count || 0,
         newLeads: newLeads.count || 0,
         pageViews: pageViews.count || 0,
+        subscribers: subscribers.count || 0,
       });
       setLoading(false);
     }
@@ -45,6 +48,7 @@ export default function AdminDashboard() {
     { label: 'Blog Posts', value: stats.posts, icon: FileText, to: '/admin/blog', color: 'text-accent-600 bg-accent-100 dark:bg-accent-900/30' },
     { label: 'Skills', value: stats.skills, icon: Tags, to: '/admin/skills', color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30' },
     { label: 'Leads', value: stats.leads, icon: Users, to: '/admin/leads', color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', badge: stats.newLeads > 0 ? `${stats.newLeads} new` : undefined },
+    { label: 'Subscribers', value: stats.subscribers, icon: Mail, to: '/admin/subscribers', color: 'text-sky-600 bg-sky-100 dark:bg-sky-900/30' },
     { label: 'Page Views', value: stats.pageViews, icon: Eye, to: '#', color: 'text-surface-600 bg-surface-100 dark:bg-surface-800' },
   ];
 
