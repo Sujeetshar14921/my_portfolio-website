@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { ContactSubmission } from '@/types';
-import { X, MessageSquare } from 'lucide-react';
+import { MessageSquare, Trash2 } from 'lucide-react';
 
 const statusColors: Record<string, string> = {
   new: 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300',
@@ -17,17 +17,23 @@ export default function AdminLeads() {
   const [notes, setNotes] = useState('');
 
   const load = async () => {
-    const { data } = await supabase.from('contact_submissions').select('*').order('created_at', { ascending: false });
+    const { data } = await supabase
+      .from('contact_submissions')
+      .select('*')
+      .order('created_at', { ascending: false });
     if (data) setLeads(data as ContactSubmission[]);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load();
+  }, []);
 
   const updateStatus = async (id: string, status: string) => {
     await supabase.from('contact_submissions').update({ status }).eq('id', id);
     load();
-    if (selected?.id === id) setSelected(prev => prev ? { ...prev, status: status as ContactSubmission['status'] } : null);
+    if (selected?.id === id)
+      setSelected(prev => (prev ? { ...prev, status: status as ContactSubmission['status'] } : null));
   };
 
   const updateNotes = async () => {
@@ -36,9 +42,26 @@ export default function AdminLeads() {
     load();
   };
 
+  // Delete Lead Handler
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation(); // Card selection click event ko rokne ke liye
+
+    const confirmed = window.confirm('Kya aap is lead ko delete karna chahte hain?');
+    if (!confirmed) return;
+
+    await supabase.from('contact_submissions').delete().eq('id', id);
+    
+    // Agar deleted lead select thi, to right detail panel ko clear kar dein
+    if (selected?.id === id) {
+      setSelected(null);
+    }
+    
+    load();
+  };
+
   const handleSelect = (lead: ContactSubmission) => {
     setSelected(lead);
-    setNotes(lead.notes);
+    setNotes(lead.notes || '');
   };
 
   if (loading) return <div className="animate-pulse text-surface-400">Loading...</div>;
@@ -59,29 +82,51 @@ export default function AdminLeads() {
             <div
               key={lead.id}
               onClick={() => handleSelect(lead)}
-              className={`bg-white dark:bg-surface-800 rounded-xl p-4 border cursor-pointer transition-colors ${
+              className={`group bg-white dark:bg-surface-800 rounded-xl p-4 border cursor-pointer transition-colors relative ${
                 selected?.id === lead.id
                   ? 'border-primary-400 dark:border-primary-600'
                   : 'border-surface-200 dark:border-surface-700 hover:border-primary-200 dark:hover:border-primary-800'
               }`}
             >
               <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0">
+                <div className="min-w-0 pr-6">
                   <div className="font-medium">{lead.name}</div>
                   <div className="text-sm text-surface-500 truncate">{lead.email}</div>
-                  <p className="text-sm text-surface-600 dark:text-surface-400 mt-2 line-clamp-2">{lead.message}</p>
+                  <p className="text-sm text-surface-600 dark:text-surface-400 mt-2 line-clamp-2">
+                    {lead.message}
+                  </p>
                 </div>
-                <div className="text-right shrink-0">
+                <div className="text-right shrink-0 flex flex-col items-end gap-2">
                   <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusColors[lead.status] || statusColors.new}`}>
                     {lead.status.replace('_', ' ')}
                   </span>
-                  <div className="text-xs text-surface-400 mt-2">
+                  <div className="text-xs text-surface-400">
                     {lead.inquiry_type === 'recruiter' ? 'Recruiter' : 'Client'}
                   </div>
                 </div>
               </div>
-              <div className="text-xs text-surface-400 mt-2">
-                {new Date(lead.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+
+              {/* Card Footer: Date & Delete Icon */}
+              <div className="flex items-center justify-between text-xs text-surface-400 mt-3 pt-2 border-t border-surface-100 dark:border-surface-700/50">
+                <div>
+                  {new Date(lead.created_at).toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </div>
+
+                {/* Delete Icon Button */}
+                <button
+                  type="button"
+                  onClick={(e) => handleDelete(e, lead.id)}
+                  title="Delete lead"
+                  className="p-1.5 rounded-lg text-surface-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30 transition-colors"
+                >
+                  <Trash2 size={16} />
+                </button>
               </div>
             </div>
           ))}
@@ -91,7 +136,17 @@ export default function AdminLeads() {
         <div>
           {selected ? (
             <div className="bg-white dark:bg-surface-800 rounded-xl p-5 border border-surface-200 dark:border-surface-700 sticky top-6">
-              <h3 className="font-semibold mb-4">Lead Details</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-semibold">Lead Details</h3>
+                <button
+                  type="button"
+                  onClick={(e) => handleDelete(e, selected.id)}
+                  className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
+                >
+                  <Trash2 size={15} /> Delete
+                </button>
+              </div>
+
               <div className="space-y-3 text-sm">
                 <div><span className="text-surface-500">Name:</span> <span className="font-medium">{selected.name}</span></div>
                 <div><span className="text-surface-500">Email:</span> <a href={`mailto:${selected.email}`} className="text-primary-600">{selected.email}</a></div>
