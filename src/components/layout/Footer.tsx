@@ -30,69 +30,71 @@ export default function Footer() {
               </p>
             </motion.div>
 
-            {/* Navigation */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-            >
-              <span className="block text-xs font-mono uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400 mb-5">
-                Navigation
-              </span>
-              <div className="flex flex-col gap-3">
-                {[
-                  { to: '/', label: 'Home' },
-                  { to: '/projects', label: 'Projects' },
-                  { to: '/blog', label: 'Blog' },
-                  { to: '/contact', label: 'Contact' },
-                ].map(link => (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-            </motion.div>
+            <div className='grid grid-cols-2 gap-6 md:contents'>
+              {/* Navigation */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+              >
+                <span className="block text-xs font-mono uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400 mb-5">
+                  Navigation
+                </span>
+                <div className="flex flex-col gap-3">
+                  {[
+                    { to: '/', label: 'Home' },
+                    { to: '/projects', label: 'Projects' },
+                    { to: '/blog', label: 'Blog' },
+                    { to: '/contact', label: 'Contact' },
+                  ].map(link => (
+                    <Link
+                      key={link.to}
+                      to={link.to}
+                      className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  ))}
+                </div>
+              </motion.div>
 
-            {/* Social & Connect */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-            >
-              <span className="block text-xs font-mono uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400 mb-5">
-                Connect
-              </span>
-              <div className="flex flex-col gap-3">
-                <a
-                  href="https://github.com/Sujeetshar14921"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
-                >
-                  <GitHubIcon size={14} /> GitHub
-                </a>
-                <a
-                  href="https://www.linkedin.com/in/sujeet-sharma-13090326b"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
-                >
-                  <LinkedInIcon size={14} /> LinkedIn
-                </a>
-                <a
-                  href="mailto:sujeetsharmadc56@gmail.com"
-                  className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
-                >
-                  <Mail size={14} /> Email
-                </a>
-              </div>
-            </motion.div>
+              {/* Social & Connect */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+              >
+                <span className="block text-xs font-mono uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400 mb-5">
+                  Connect
+                </span>
+                <div className="flex flex-col gap-3">
+                  <a
+                    href="https://github.com/Sujeetshar14921"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
+                  >
+                    <GitHubIcon size={14} /> GitHub
+                  </a>
+                  <a
+                    href="https://www.linkedin.com/in/sujeet-sharma-13090326b"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
+                  >
+                    <LinkedInIcon size={14} /> LinkedIn
+                  </a>
+                  <a
+                    href="mailto:sujeetsharmadc56@gmail.com"
+                    className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
+                  >
+                    <Mail size={14} /> Email
+                  </a>
+                </div>
+              </motion.div>
+            </div>
 
             {/* Scroll to Top */}
             <motion.div

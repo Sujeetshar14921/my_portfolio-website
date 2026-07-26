@@ -105,7 +105,7 @@ export default function ContactSection({ profile }: ContactProps) {
             <button
               type="submit"
               disabled={status === 'sending'}
-              className="flex items-center justify-center gap-2 px-6 py-3 border border-surface-900 dark:border-white text-surface-900 dark:text-white text-xs font-mono uppercase tracking-wider hover:bg-surface-900 hover:text-white dark:hover:bg-white dark:hover:text-surface-900 transition-colors disabled:opacity-50"
+              className="flex items-center justify-center gap-2 px-6 py-3 border rounded-lg border-surface-900 dark:border-white text-surface-900 dark:text-white text-xs font-mono uppercase tracking-wider hover:bg-surface-900 hover:text-white dark:hover:bg-white dark:hover:text-surface-900 transition-colors disabled:opacity-50"
             >
               <Send size={14} />
               {status === 'sending' ? 'Sending...' : status === 'sent' ? 'Sent' : 'Send message'}

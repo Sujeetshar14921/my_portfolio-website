@@ -1,7 +1,7 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useAnimation, useReducedMotion } from "framer-motion";
 import { Quote, X } from "lucide-react";
 import { Testimonial } from "@/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface TestimonialsProps {
   testimonials: Testimonial[];
@@ -13,20 +13,52 @@ export default function TestimonialsSection({
   const published = testimonials.filter((t) => t.published);
 
   const [selected, setSelected] = useState<Testimonial | null>(null);
-
-  if (published.length === 0) return null;
+  const prefersReducedMotion = useReducedMotion();
+  const row1Controls = useAnimation();
+  const row2Controls = useAnimation();
 
   const row1 = [...published, ...published];
   const row2 = [...published].reverse();
   const row2Loop = [...row2, ...row2];
 
-  const TestimonialCard = ({
-    t,
-    i,
-  }: {
-    t: Testimonial;
-    i: number;
-  }) => (
+  const row1Anim = () =>
+    row1Controls.start({
+      x: ["0%", "-50%"],
+      transition: { duration: 35, ease: "linear", repeat: Infinity },
+    });
+  const row2Anim = () =>
+    row2Controls.start({
+      x: ["-50%", "0%"],
+      transition: { duration: 35, ease: "linear", repeat: Infinity },
+    });
+
+  useEffect(() => {
+    if (prefersReducedMotion || published.length === 0) return;
+    row1Anim();
+    row2Anim();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefersReducedMotion, published.length]);
+
+  // Lock background scroll and allow Escape to close the modal
+  useEffect(() => {
+    if (!selected) return;
+
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setSelected(null);
+    };
+    document.addEventListener("keydown", onKeyDown);
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = originalOverflow;
+    };
+  }, [selected]);
+
+  if (published.length === 0) return null;
+
+  const TestimonialCard = ({ t, i }: { t: Testimonial; i: number }) => (
     <motion.div
       key={`${t.id}-${i}`}
       initial={{ opacity: 0, y: 30 }}
@@ -37,8 +69,7 @@ export default function TestimonialsSection({
       onClick={() => setSelected(t)}
       className="flex-shrink-0 w-[340px] cursor-pointer"
     >
-      {/* UI SAME */}
-      <div className="flex flex-col h-full border border-surface-200 dark:border-white/10 p-6 md:p-8">
+      <div className="flex flex-col h-full rounded-2xl border border-surface-200 dark:border-white/10 bg-white/60 dark:bg-surface-900/40 p-6 md:p-8 transition-colors hover:border-primary-600/40 dark:hover:border-primary-400/40">
         <Quote
           size={20}
           className="text-surface-300 dark:text-surface-700 mb-4 shrink-0"
@@ -74,13 +105,13 @@ export default function TestimonialsSection({
   );
 
   return (
-    <section className="section-padding overflow-hidden bg-[url('/public/bgImg.svg')] bg-cover bg-center bg-no-repeat">
+    <section className="section-padding relative overflow-hidden bg-[url('/bgImg.svg')] bg-cover bg-center bg-no-repeat">
       <div className="w-full md:px-12 lg:px-20">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="mb-14"
+          className="mb-14 -mt-20"
         >
           <span className="block text-xs font-mono uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400 mb-3">
             / Testimonials
@@ -92,46 +123,29 @@ export default function TestimonialsSection({
         </motion.div>
 
         {/* Netflix Style Marquee */}
-        <div className="overflow-hidden space-y-8">
+        <div className="relative overflow-hidden space-y-8">
+
           {/* Row 1 */}
           <motion.div
-            animate={{
-              x: ["0%", "-50%"],
-            }}
-            transition={{
-              duration: 35,
-              ease: "linear",
-              repeat: Infinity,
-            }}
+            animate={row1Controls}
+            onHoverStart={() => !prefersReducedMotion && row1Controls.stop()}
+            onHoverEnd={() => !prefersReducedMotion && row1Anim()}
             className="flex gap-8 w-max"
           >
             {row1.map((t, i) => (
-              <TestimonialCard
-                key={`row1-${t.id}-${i}`}
-                t={t}
-                i={i}
-              />
+              <TestimonialCard key={`row1-${t.id}-${i}`} t={t} i={i} />
             ))}
           </motion.div>
 
           {/* Row 2 */}
           <motion.div
-            animate={{
-              x: ["-50%", "0%"],
-            }}
-            transition={{
-              duration: 35,
-              ease: "linear",
-              repeat: Infinity,
-            }}
+            animate={row2Controls}
+            onHoverStart={() => !prefersReducedMotion && row2Controls.stop()}
+            onHoverEnd={() => !prefersReducedMotion && row2Anim()}
             className="flex gap-8 w-max"
           >
             {row2Loop.map((t, i) => (
-              <TestimonialCard
-                key={`row2-${t.id}-${i}`}
-                t={t}
-                i={i}
-              />
+              <TestimonialCard key={`row2-${t.id}-${i}`} t={t} i={i} />
             ))}
           </motion.div>
         </div>
@@ -145,48 +159,30 @@ export default function TestimonialsSection({
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelected(null)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`Testimonial from ${selected.name}`}
             className="fixed inset-0 z-[9999] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
           >
             <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.8,
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.8,
-              }}
-              transition={{
-                type: "spring",
-                stiffness: 120,
-              }}
+              initial={{ opacity: 0, scale: 0.9, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 10 }}
+              transition={{ type: "spring", stiffness: 260, damping: 24 }}
               onClick={(e) => e.stopPropagation()}
-              className="
-                relative
-                w-full
-                max-w-4xl
-                bg-white
-                dark:bg-surface-900
-                border
-                border-surface-200
-                dark:border-white/10
-                p-10
-              "
+              className="relative w-full max-w-4xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white dark:bg-surface-900 border border-surface-200 dark:border-white/10 shadow-2xl p-8 md:p-10"
             >
               <button
                 onClick={() => setSelected(null)}
-                className="absolute top-5 right-5"
+                aria-label="Close testimonial"
+                className="absolute top-5 right-5 rounded-full p-2 text-surface-500 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 hover:bg-surface-100 dark:hover:bg-white/5 transition-colors"
               >
                 <X size={20} />
               </button>
 
               <Quote
                 size={40}
-                className="text-surface-300 dark:text-surface-700 mb-6"
+                className="text-primary-600/30 dark:text-primary-400/30 mb-6"
               />
 
               <p className="text-xl leading-relaxed text-surface-700 dark:text-surface-300 mb-8">
@@ -200,7 +196,7 @@ export default function TestimonialsSection({
                     "https://images.pexels.com/photos/220453/pexels-photo-220453.jpeg?auto=compress&cs=tinysrgb&w=100"
                   }
                   alt={selected.name}
-                  className="w-20 h-20 rounded-full object-cover"
+                  className="w-20 h-20 rounded-full object-cover border-2 border-primary-600/30 dark:border-primary-400/30"
                 />
 
                 <div>

@@ -17,18 +17,30 @@ export default function BlogCard({ post, index }: BlogCardProps) {
     <motion.article
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -6 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
-      className="group bg-white dark:bg-surface-900  overflow-hidden shadow-sm border border-surface-200 dark:border-surface-700 card-hover bg-[url('/public/bgImg.svg')] bg-cover bg-center bg-no-repeat"
+      className="group relative overflow-hidden rounded-2xl border border-surface-200 dark:border-white/10 bg-transparent bg-[url('/bgImg.svg')] bg-cover bg-center bg-no-repeat transition-colors duration-300 hover:border-primary-600/40 dark:hover:border-primary-400/40"
     >
-      <div className="relative overflow-hidden aspect-[16/9]">
-        <img
-          src={post.cover_image}
-          alt={post.title}
-          loading="lazy"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-      </div>
+      <Link
+        to={`/blog/${post.slug}`}
+        className="relative block overflow-hidden aspect-[16/9] bg-surface-50 dark:bg-white/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400 focus-visible:ring-inset"
+      >
+        {post.cover_image ? (
+          <img
+            src={post.cover_image}
+            alt={post.title}
+            loading="lazy"
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          />
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span className="text-xs font-mono uppercase tracking-[0.2em] text-surface-400 dark:text-surface-500">
+              {post.title}
+            </span>
+          </div>
+        )}
+      </Link>
 
       <div className="p-5">
         <div className="flex items-center gap-3 text-xs text-surface-500 dark:text-surface-400 mb-3">
@@ -36,9 +48,14 @@ export default function BlogCard({ post, index }: BlogCardProps) {
           <span className="flex items-center gap-1"><Clock size={12} /> {post.read_time} min read</span>
         </div>
 
-        <h3 className="text-lg font-bold text-surface-900 dark:text-surface-50 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
-          {post.title}
-        </h3>
+        <Link
+          to={`/blog/${post.slug}`}
+          className="block rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400"
+        >
+          <h3 className="text-lg font-bold text-surface-900 dark:text-surface-50 mb-2 group-hover:text-primary-600 dark:group-hover:text-primary-400 transition-colors line-clamp-2">
+            {post.title}
+          </h3>
+        </Link>
 
         <p className="text-sm text-surface-500 dark:text-surface-400 leading-relaxed mb-4 line-clamp-2">
           {post.excerpt}
@@ -46,7 +63,7 @@ export default function BlogCard({ post, index }: BlogCardProps) {
 
         <div className="flex flex-wrap gap-1.5 mb-4">
           {post.tags.slice(0, 3).map(tag => (
-            <span key={tag} className="px-2 py-1 text-[10px] font-mono uppercase tracking-wide border border-surface-200 dark:border-white/10 text-surface-500 dark:text-surface-400">
+            <span key={tag} className="px-2 py-1 rounded-md text-[10px] font-mono uppercase tracking-wide border border-surface-200 dark:border-white/10 text-surface-500 dark:text-surface-400">
               {tag}
             </span>
           ))}
@@ -54,9 +71,13 @@ export default function BlogCard({ post, index }: BlogCardProps) {
 
         <Link
           to={`/blog/${post.slug}`}
-          className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-1 transition-colors"
+          className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:text-primary-700 dark:hover:text-primary-300 flex items-center gap-1 transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400"
         >
-          Read More <ArrowRight size={14} />
+          Read More{" "}
+          <ArrowRight
+            size={14}
+            className="transition-transform group-hover:translate-x-1"
+          />
         </Link>
       </div>
     </motion.article>

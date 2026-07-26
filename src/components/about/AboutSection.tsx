@@ -42,7 +42,7 @@ export default function AboutSection({ profile }: AboutProps) {
   const achievements = profile?.achievements || [];
 
   return (
-    <section id="about" className=" relative w-full py-16 bg-[url('/public/bgImg.svg')] bg-cover bg-center bg-no-repeat  ">
+    <section id="about" className=" relative w-full py-16 bg-[url('/bgImg.svg')] bg-cover bg-center bg-no-repeat  ">
       <div className="w-full px-6 md:px-12 lg:px-32">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -58,34 +58,31 @@ export default function AboutSection({ profile }: AboutProps) {
           </h2>
         </motion.div>
 
-        {/* Large Horizontal Photo with Colorful Multi-Layer Border */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
-          whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
-          className="mb-14 inline-block w-full"
-        >
-          <div className="relative w-full aspect-[16/9]">
-            {/* Rotated color block behind */}
-            <div
-              className="absolute inset-0 -rotate-2 -z-10"
-              style={{ backgroundColor: "#EA580C" }}
-            />
-            <div
-              className="absolute inset-0 rotate-1 -z-10 translate-x-3 translate-y-3"
-              style={{ backgroundColor: "#3A86FF" }}
-            />
+       {/* Large Horizontal Photo with IDE-style Focus Frame */}
+<motion.div
+  initial={{ opacity: 0, scale: 0.9, rotate: -2 }}
+  whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
+  viewport={{ once: true }}
+  transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+  className="mb-14 inline-block w-full"
+>
+  <div className="relative w-full aspect-[16/9]">
+    {/* Single subtle offset layer for depth */}
+    <div className="absolute inset-0 -rotate-1 -z-10 translate-x-2 translate-y-2 bg-surface-100 dark:bg-surface-800 rounded-2xl" />
 
-            {/* Main image */}
-            <img
-              src={profile?.photo_url || 'https://images.pexels.com/photos/2379005/pexels-photo-2379005.jpeg?auto=compress&cs=tinysrgb&w=800'}
-              alt={profile?.name || 'Alex Morgan'}
-              loading="lazy"
-              className="w-full h-full object-cover border-4 border-white dark:border-surface-900 relative shadow-2xl"
-            />
-          </div>
-        </motion.div>
+    {/* Main image */}
+    <img
+      src={profile?.photo_url || 'url error'}
+      alt={profile?.name || 'Name'}
+      loading="lazy"
+      className="w-full h-full object-cover rounded-2xl border-4 border-white dark:border-surface-900 relative shadow-2xl"
+    />
+
+    {/* Corner brackets — IDE selection / code-editor motif */}
+    <span className="absolute -top-2 -left-2 w-8 h-8 border-t-4 border-l-4 border-primary-600 dark:border-primary-400 rounded-tl-lg" />
+    <span className="absolute -bottom-2 -right-2 w-8 h-8 border-b-4 border-r-4 border-primary-600 dark:border-primary-400 rounded-br-lg" />
+  </div>
+</motion.div>
 
         {/* Name, Role, Bio */}
         <motion.div
@@ -121,7 +118,7 @@ export default function AboutSection({ profile }: AboutProps) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.3 }}
-            className="text-surface-600 dark:text-surface-400 leading-relaxed text-base md:text-lg w-full max-w-none"
+            className="text-surface-600 dark:text-surface-400 text-justify leading-relaxed text-base md:text-lg w-full max-w-none"
           >
             {profile?.bio || 'Empty Bio'}
           </motion.p>
@@ -138,11 +135,11 @@ export default function AboutSection({ profile }: AboutProps) {
             <span className="flex items-center gap-2 text-xs font-mono uppercase tracking-[0.2em] text-primary-600 dark:text-primary-400 mb-5">
               <Award size={14} /> Achievements &amp; Certifications
             </span>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            <div className="flex flex-wrap gap-2">
               {achievements.map((a, i) => (
                 <span
                   key={i}
-                  className="px-3 py-2.5 text-xs font-mono uppercase tracking-wide border border-surface-200 dark:border-white/10 text-surface-600 dark:text-surface-400 hover:border-primary-600 dark:hover:border-primary-400 transition-colors"
+                  className="px-3 py-2.5 text-xs font-mono rounded-3xl uppercase tracking-wide border border-surface-200 dark:border-white/10 backdrop-blur-md"
                 >
                   {a}
                 </span>

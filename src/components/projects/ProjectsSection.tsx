@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Project } from '@/types';
 import ProjectCard from './ProjectCard';
+import Pagination from '../Pagination/pagination'; // Apne folder path ke hisab se import path check kar lein
+import Loader from '../Loader/loader';
 
 interface ProjectsProps {
   projects: Project[];
@@ -15,12 +17,32 @@ const categories = [
   { key: 'mobile', label: 'Mobile' },
 ];
 
+const ITEMS_PER_PAGE = 4; // Par page dikhane wale projects ki sankhya
+
 export default function ProjectsSection({ projects }: ProjectsProps) {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
 
+  // Filter projects by category
   const filtered = activeCategory === 'all'
     ? projects
     : projects.filter(p => p.category === activeCategory);
+
+  // Category badalne par page ko reset karein
+  const handleCategoryChange = (key: string) => {
+    setActiveCategory(key);
+    setCurrentPage(1);
+  };
+
+  // Pagination calculation
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedProjects = filtered.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <section id="projects" className="section-padding">
@@ -47,7 +69,7 @@ export default function ProjectsSection({ projects }: ProjectsProps) {
           {categories.map(cat => (
             <button
               key={cat.key}
-              onClick={() => setActiveCategory(cat.key)}
+              onClick={() => handleCategoryChange(cat.key)}
               className={`text-xs font-mono uppercase tracking-wider pb-1 border-b-2 transition-colors ${activeCategory === cat.key
                 ? 'border-primary-600 dark:border-primary-400 text-surface-900 dark:text-white'
                 : 'border-transparent text-surface-400 dark:text-surface-500 hover:text-surface-700 dark:hover:text-surface-300'
@@ -61,7 +83,7 @@ export default function ProjectsSection({ projects }: ProjectsProps) {
         {/* ===== DESKTOP: Original grid ===== */}
         <div className="hidden md:grid md:grid-cols-2 gap-x-10 gap-y-14">
           <AnimatePresence mode="popLayout">
-            {filtered.map((project, i) => (
+            {paginatedProjects.map((project, i) => (
               <motion.div
                 key={project.id}
                 layout
@@ -80,13 +102,13 @@ export default function ProjectsSection({ projects }: ProjectsProps) {
         <div className="md:hidden relative">
           <AnimatePresence mode="wait">
             <motion.div
-              key={activeCategory}
+              key={`${activeCategory}-${currentPage}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.25 }}
             >
-              {filtered.map((project, idx) => (
+              {paginatedProjects.map((project, idx) => (
                 <div
                   key={project.id}
                   className="sticky"
@@ -112,22 +134,26 @@ export default function ProjectsSection({ projects }: ProjectsProps) {
                 </div>
               ))}
 
-              {filtered.length === 0 && (
-                <div className="text-center py-16 text-sm font-mono uppercase tracking-wider text-surface-400 dark:text-surface-500">
-                  No projects in this category yet.
-                </div>
-              )}
-
-              {/* Spacer so last card fully settles into view */}
-              {filtered.length > 0 && <div className="h-[25vh]" />}
+              {paginatedProjects.length > 0 && <div className="h-[25vh]" />}
             </motion.div>
           </AnimatePresence>
         </div>
 
-        {/* Empty state — desktop only (mobile handled above) */}
+        {/* Empty state — shown once, for both desktop and mobile */}
         {filtered.length === 0 && (
-          <div className="hidden md:block text-center py-16 text-sm font-mono uppercase tracking-wider text-surface-400 dark:text-surface-500">
-            No projects in this category yet.
+          <div className="flex items-center justify-center min-h-screen">
+            <Loader/>
+          </div>
+        )}
+
+        {/* ===== PAGINATION COMPONENT ===== */}
+        {filtered.length > 0 && (
+          <div className="pt-16">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+            />
           </div>
         )}
       </div>

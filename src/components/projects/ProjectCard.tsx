@@ -14,14 +14,15 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
     <motion.div
       initial={{ opacity: 0, y: 30 }}
       whileInView={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -6 }}
       viewport={{ once: true }}
       transition={{ delay: index * 0.1 }}
-      className="group"
+      className="group rounded-2xl border border-surface-200 dark:border-white/10 bg-white/60 dark:bg-surface-900/40 overflow-hidden transition-colors duration-300 hover:border-primary-600/40 dark:hover:border-primary-400/40"
     >
       {/* Image / placeholder block */}
       <Link
         to={`/projects/${project.slug}`}
-        className="relative block aspect-video overflow-hidden bg-surface-50 dark:bg-white/[0.02] border border-surface-200 dark:border-white/10"
+        className="relative block aspect-video overflow-hidden bg-surface-50 dark:bg-white/[0.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400 focus-visible:ring-inset"
       >
         {project.image_url ? (
           <img
@@ -38,24 +39,29 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
           </div>
         )}
 
+        {/* Gradient for badge legibility over bright images */}
+        {(project.case_study || project.featured) && (
+          <div className="absolute inset-x-0 top-0 h-16 bg-gradient-to-b from-black/40 to-transparent pointer-events-none" />
+        )}
+
         {project.case_study && (
-          <span className="absolute top-3 left-3 px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest border border-surface-300 dark:border-white/20 bg-white/70 dark:bg-black/40 backdrop-blur-sm text-surface-700 dark:text-white">
+          <span className="absolute top-3 left-3 px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-widest border border-white/20 bg-black/40 backdrop-blur-sm text-white">
             Case Study
           </span>
         )}
         {project.featured && (
-          <span className="absolute top-3 right-3 px-2.5 py-1 text-[10px] font-mono uppercase tracking-widest border border-surface-300 dark:border-white/20 bg-white/70 dark:bg-black/40 backdrop-blur-sm text-surface-700 dark:text-white">
+          <span className="absolute top-3 right-3 px-2.5 py-1 rounded-md text-[10px] font-mono uppercase tracking-widest border border-primary-400/40 bg-primary-600/70 backdrop-blur-sm text-white">
             Featured
           </span>
         )}
       </Link>
 
       {/* Content */}
-      <div className="pt-5">
+      <div className="p-5">
         <div className="flex items-start justify-between gap-4">
           <Link
             to={`/projects/${project.slug}`}
-            className="text-lg font-bold text-surface-900 dark:text-white flex items-center gap-1.5 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+            className="text-lg font-bold text-surface-900 dark:text-white flex items-center gap-1.5 hover:text-primary-600 dark:hover:text-primary-400 transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400"
           >
             {project.title}
             <ArrowRight
@@ -70,7 +76,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                 href={project.demo_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                className="text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400"
                 aria-label="Live demo"
               >
                 <ExternalLink size={14} />
@@ -81,7 +87,7 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
                 href={project.github_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 transition-colors"
+                className="text-surface-400 hover:text-surface-900 dark:hover:text-surface-100 transition-colors rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400"
                 aria-label="GitHub"
               >
                 <GitHubIcon size={14} />
@@ -98,13 +104,13 @@ export default function ProjectCard({ project, index }: ProjectCardProps) {
           {project.tech_stack.slice(0, 4).map(tech => (
             <span
               key={tech}
-              className="px-2 py-1 text-[10px] font-mono uppercase tracking-wide border border-surface-200 dark:border-white/10 text-surface-500 dark:text-surface-400"
+              className="px-2 py-1 rounded-md text-[10px] font-mono uppercase tracking-wide border border-surface-200 dark:border-white/10 text-surface-500 dark:text-surface-400"
             >
               {tech}
             </span>
           ))}
           {project.tech_stack.length > 4 && (
-            <span className="px-2 py-1 text-[10px] font-mono uppercase tracking-wide border border-surface-200 dark:border-white/10 text-surface-400 dark:text-surface-500">
+            <span className="px-2 py-1 rounded-md text-[10px] font-mono uppercase tracking-wide border border-surface-200 dark:border-white/10 text-surface-400 dark:text-surface-500">
               +{project.tech_stack.length - 4}
             </span>
           )}

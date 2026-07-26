@@ -3,6 +3,7 @@ import { ArrowRight, Mail, Download, ArrowDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Profile } from "@/types";
 import { useState } from "react";
+import Ribbon from "../ribbon/ribbon";
 
 interface HeroProps {
   profile: Profile | null;
@@ -12,12 +13,12 @@ export default function HeroSection({ profile }: HeroProps) {
   const [resumeHover, setResumeHover] = useState(false);
 
   return (
-    <section className="relative w-full min-h-screen flex items-center justify-center overflow-hidden bg-surface-950">
+    <section className="relative w-full min-h-[100dvh] flex items-center justify-center overflow-hidden bg-surface-950">
       {/* Background Image */}
       <div
         className="absolute inset-0 w-full h-full bg-cover bg-center "
         style={{
-          backgroundImage: `url('../bgImage.jpg')`,
+          backgroundImage: `url('/bgImage.jpg')`,
         }}
       />
 
@@ -31,26 +32,20 @@ export default function HeroSection({ profile }: HeroProps) {
       />
 
       {/* Main content */}
-      <div className="relative z-10 w-full max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-12 flex flex-col items-center justify-center pt-20 pb-28">
+      <div className="relative z-10 w-full max-w-screen-xl mx-auto px-4 sm:px-8 lg:px-12 flex flex-col items-center justify-center pt-4 pb-6 sm:pt-16 sm:pb-20 md:pt-20 md:pb-28">
 
         {/* Status Badge */}
-        <div className="mb-12 inline-flex items-center gap-3 px-5 py-2.5 border border-white/30 backdrop-blur-md text-xs rounded-full font-mono uppercase tracking-[0.15em] text-white/90">
-          <span className="relative flex h-2 w-2 shrink-0">
-            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75 animate-pulse" />
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-          </span>
-          <span>Available for freelance</span>
-        </div>
+        <Ribbon />
 
         {/* Name - Single Color, Simple */}
         <h1
-          className="uppercase leading-[0.9] text-center mb-6 break-words font-black"
+          className="uppercase whitespace-nowrap leading-[0.9] text-center mb-6 font-black tracking-[0.06em] transition-transform duration-300 hover:scale-105"
           style={{
             fontSize: "clamp(3rem, 8vw, 12rem)",
             fontFamily: "'Space Grotesk', sans-serif",
             color: "transparent",
             WebkitTextStroke: "1.5px rgba(255,255,255,0.8)",
-            letterSpacing: "-0.05em",
+            letterSpacing: "0.01em",
             filter: "drop-shadow(0 0 15px rgba(255,255,255,0.15))",
           }}
         >
@@ -58,7 +53,7 @@ export default function HeroSection({ profile }: HeroProps) {
         </h1>
         {/* Profession - Single Color */}
         <h2
-          className="font-black leading-tight tracking-[-0.03em] text-white text-center mb-10 break-words"
+          className="font-black leading-tight tracking-[-0.03em] text-white text-center mb-10 break-words transition-transform duration-300 hover:scale-105"
           style={{
             fontSize: "clamp(1.8rem, 5vw, 4.5rem)",
             textShadow: "0 8px 25px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.7)",
@@ -69,7 +64,7 @@ export default function HeroSection({ profile }: HeroProps) {
             .map((word, i) => (
               <span
                 key={i}
-                className={i === 1 ? "text-orange-600" : ""}
+                className={i === 1 ? "text-primary-400" : ""}
               >
                 {word}{" "}
               </span>
@@ -94,7 +89,7 @@ export default function HeroSection({ profile }: HeroProps) {
           onMouseLeave={() => setResumeHover(false)}
           whileHover={{ scale: 1.08 }}
           whileTap={{ scale: 0.92 }}
-          className="group relative inline-flex items-center gap-3 px-8 py-5 overflow-hidden border border-white/30 backdrop-blur-md "
+          className="group relative inline-flex items-center gap-3 px-8 py-5 overflow-hidden border border-white/30 rounded-2xl backdrop-blur-md "
         >
 
           {/* Glow */}

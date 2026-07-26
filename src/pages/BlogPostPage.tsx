@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { BlogPost } from '@/types';
 import BlogPostDetail from '@/components/blog/BlogPostDetail';
 import { ArrowLeft } from 'lucide-react';
+import Loader from '@/components/Loader/loader';
 
 export default function BlogPostPage() {
   const { slug } = useParams();
@@ -29,7 +30,9 @@ export default function BlogPostPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-surface-400">Loading...</div>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader />
+        </div>
       </div>
     );
   }

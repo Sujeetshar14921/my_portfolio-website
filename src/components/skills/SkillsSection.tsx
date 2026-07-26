@@ -28,7 +28,7 @@ export default function SkillsSection({ skills }: SkillsProps) {
   return (
     <section
       id="skills"
-      className="section-padding bg-white dark:bg-surface-950 transition-colors duration-300 bg-[url('/public/bgImg.svg')] bg-cover bg-center bg-no-repeat"
+      className="section-padding bg-white dark:bg-surface-950 transition-colors duration-300 bg-[url('/bgImg.svg')] bg-cover bg-center bg-no-repeat"
     >
       <div className="w-full md:px-12 lg:px-20">
         <motion.div
@@ -55,6 +55,7 @@ export default function SkillsSection({ skills }: SkillsProps) {
         <div
           className="
             grid grid-cols-1 md:grid-cols-2
+            rounded-2xl
             overflow-hidden
             border border-surface-200
             dark:border-white/10
@@ -100,7 +101,7 @@ export default function SkillsSection({ skills }: SkillsProps) {
                         px-4 py-3
                         mb-3
                         last:mb-0
-                        rounded-sm
+                        rounded-3xl
                         border border-surface-200
                         dark:border-white/10
                         transition-all duration-300
