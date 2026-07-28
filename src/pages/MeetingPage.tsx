@@ -37,6 +37,7 @@ export default function MeetingPage() {
   const [participants, setParticipants] = useState<MeetingParticipant[]>([]);
   const [activeTab, setActiveTab] = useState<'notes' | 'chat'>('chat');
   const [myParticipantId, setMyParticipantId] = useState<string | null>(null);
+  const [pendingMeeting, setPendingMeeting] = useState<Meeting | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const jitsiRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<unknown>(null);
@@ -140,14 +141,20 @@ export default function MeetingPage() {
   }, [meeting?.id]);
 
   const enterJitsi = useCallback((m: Meeting) => {
-    setPhase('meeting');
-    // Stop lobby preview stream
+    // Stop lobby preview stream before switching phase
     if (videoStream) {
       videoStream.getTracks().forEach(t => t.stop());
       setVideoStream(null);
     }
-    // Load Jitsi script if needed, then join
-    const loadAndJoin = async () => {
+    setPendingMeeting(m);
+    setPhase('meeting');
+  }, [videoStream]);
+
+  // Initialize Jitsi after React has committed the meeting phase DOM
+  useEffect(() => {
+    if (phase !== 'meeting' || !pendingMeeting || !jitsiRef.current || jitsiApiRef.current) return;
+    const m = pendingMeeting;
+    const init = async () => {
       if (!window.JitsiMeetExternalAPI) {
         await new Promise<void>((resolve, reject) => {
           const script = document.createElement('script');
@@ -180,8 +187,8 @@ export default function MeetingPage() {
         userInfo: { displayName: displayName || 'Guest' },
       });
     };
-    loadAndJoin().catch(err => console.error('Jitsi load failed', err));
-  }, [videoStream, micOn, camOn, displayName]);
+    init().catch(err => console.error('Jitsi init failed', err));
+  }, [phase, pendingMeeting, micOn, camOn, displayName]);
 
   const leaveJitsi = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any

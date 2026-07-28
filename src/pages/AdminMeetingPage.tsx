@@ -38,6 +38,7 @@ export default function AdminMeetingPage() {
   const [endingMeeting, setEndingMeeting] = useState(false);
   const [waitingClients, setWaitingClients] = useState(0);
   const [notification, setNotification] = useState<string | null>(null);
+  const [pendingMeeting, setPendingMeeting] = useState<Meeting | null>(null);
 
   const jitsiRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<unknown>(null);
@@ -133,40 +134,50 @@ export default function AdminMeetingPage() {
     setTimeout(() => setNotification(null), 4000);
   };
 
-  const enterJitsi = useCallback(async (m: Meeting) => {
+  const enterJitsi = useCallback((m: Meeting) => {
+    setPendingMeeting(m);
     setPhase('meeting');
-    if (!window.JitsiMeetExternalAPI) {
-      await new Promise<void>((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://meet.jit.si/external_api.js';
-        script.async = true;
-        script.onload = () => resolve();
-        script.onerror = () => reject(new Error('Failed to load Jitsi'));
-        document.body.appendChild(script);
+  }, []);
+
+  // Initialize Jitsi after React has committed the meeting phase DOM
+  useEffect(() => {
+    if (phase !== 'meeting' || !pendingMeeting || !jitsiRef.current || jitsiApiRef.current) return;
+    const m = pendingMeeting;
+    const init = async () => {
+      if (!window.JitsiMeetExternalAPI) {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://meet.jit.si/external_api.js';
+          script.async = true;
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error('Failed to load Jitsi'));
+          document.body.appendChild(script);
+        });
+      }
+      if (!jitsiRef.current) return;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const JitsiAPI = (window as any).JitsiMeetExternalAPI;
+      jitsiApiRef.current = new JitsiAPI('meet.jit.si', {
+        roomName: `sujeetsharma-${m.secure_token}`,
+        width: '100%',
+        height: '100%',
+        parentNode: jitsiRef.current,
+        configOverwrite: {
+          startWithAudioMuted: false,
+          startWithVideoMuted: false,
+          prejoinPageEnabled: false,
+        },
+        interfaceConfigOverwrite: {
+          TOOLBAR_BUTTONS: ['microphone', 'camera', 'desktop', 'fullscreen', 'fodeviceselection', 'hangup', 'chat', 'settings', 'raisehand', 'videoquality', 'filmstrip', 'shortcuts', 'tileview', 'videobackgroundblur', 'help', 'mute-everyone'],
+          SHOW_JITSI_WATERMARK: false,
+          SHOW_WATERMARK_FOR_GUESTS: false,
+          SHOW_BRAND_WATERMARK: false,
+        },
+        userInfo: { displayName: profile?.name || 'Host' },
       });
-    }
-    if (!jitsiRef.current) return;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const JitsiAPI = (window as any).JitsiMeetExternalAPI;
-    jitsiApiRef.current = new JitsiAPI('meet.jit.si', {
-      roomName: `sujeetsharma-${m.secure_token}`,
-      width: '100%',
-      height: '100%',
-      parentNode: jitsiRef.current,
-      configOverwrite: {
-        startWithAudioMuted: false,
-        startWithVideoMuted: false,
-        prejoinPageEnabled: false,
-      },
-      interfaceConfigOverwrite: {
-        TOOLBAR_BUTTONS: ['microphone', 'camera', 'desktop', 'fullscreen', 'fodeviceselection', 'hangup', 'chat', 'settings', 'raisehand', 'videoquality', 'filmstrip', 'shortcuts', 'tileview', 'videobackgroundblur', 'help', 'mute-everyone'],
-        SHOW_JITSI_WATERMARK: false,
-        SHOW_WATERMARK_FOR_GUESTS: false,
-        SHOW_BRAND_WATERMARK: false,
-      },
-      userInfo: { displayName: profile?.name || 'Host' },
-    });
-  }, [profile?.name]);
+    };
+    init().catch(err => console.error('Jitsi init failed', err));
+  }, [phase, pendingMeeting, profile?.name]);
 
   const leaveJitsi = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
