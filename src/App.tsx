@@ -17,11 +17,14 @@ import AdminProjects from '@/components/admin/AdminProjects';
 import AdminBlog from '@/components/admin/AdminBlog';
 import AdminSkills from '@/components/admin/AdminSkills';
 import AdminLeads from '@/components/admin/AdminLeads';
+import AdminMeetings from '@/components/admin/AdminMeetings';
 import AdminProfile from '@/components/admin/AdminProfile';
 import AdminTestimonials from '@/components/admin/AdminTestimonials';
 import AdminSubscribers from './components/admin/AdminSubscribeers';
 import VerifyEmailPage from '@/pages/VerifyEmailPage';
 import UnsubscribePage from '@/pages/UnsubscribePage';
+import LeadVerifyPage from '@/pages/LeadVerifyPage';
+import MeetingPage from '@/pages/MeetingPage';
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -77,6 +80,10 @@ export default function App() {
             <Route path="/newsletter/verify" element={<VerifyEmailPage />} />
             <Route path="/newsletter/unsubscribe" element={<UnsubscribePage />} />
 
+            {/* CRM public routes — no login required */}
+            <Route path="/verify-email" element={<LeadVerifyPage />} />
+            <Route path="/meeting/:meetingId" element={<MeetingPage />} />
+
             {/* Admin routes */}
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
@@ -85,6 +92,7 @@ export default function App() {
               <Route path="blog" element={<AdminBlog />} />
               <Route path="skills" element={<AdminSkills />} />
               <Route path="leads" element={<AdminLeads />} />
+              <Route path="meetings" element={<AdminMeetings />} />
               <Route path="subscribers" element={<AdminSubscribers />} />
               <Route path="profile" element={<AdminProfile />} />
               <Route path="testimonials" element={<AdminTestimonials />} />

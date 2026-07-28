@@ -83,11 +83,88 @@ export interface ContactSubmission {
   email: string;
   inquiry_type: 'recruiter' | 'client';
   message: string;
-  status: 'new' | 'contacted' | 'in_progress' | 'closed';
+  status: LeadStatus;
   notes: string;
   created_at: string;
   updated_at: string;
+  phone: string | null;
+  company: string | null;
+  budget: string | null;
+  service: string | null;
+  email_verified: boolean;
+  verification_token: string | null;
+  verification_sent_at: string | null;
+  meeting_status: MeetingStatus;
 }
+
+export type LeadStatus =
+  | 'pending_verification'
+  | 'verified'
+  | 'new'
+  | 'contacted'
+  | 'meeting_scheduled'
+  | 'meeting_completed'
+  | 'proposal_sent'
+  | 'won'
+  | 'lost';
+
+export type MeetingStatus = 'none' | 'scheduled' | 'completed' | 'cancelled';
+
+export interface Meeting {
+  id: string;
+  lead_id: string | null;
+  title: string;
+  agenda: string;
+  meeting_type: 'one_on_one' | 'group';
+  meeting_url: string;
+  secure_token: string;
+  meeting_date: string;
+  meeting_time: string;
+  duration: number;
+  status: 'scheduled' | 'completed' | 'cancelled';
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MeetingNote {
+  id: string;
+  meeting_id: string;
+  content: string;
+  created_by: string | null;
+  created_at: string;
+}
+
+export interface MeetingParticipant {
+  id: string;
+  meeting_id: string;
+  email: string;
+  name: string | null;
+  rsvp_status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+}
+
+export interface ActivityLog {
+  id: string;
+  lead_id: string | null;
+  meeting_id: string | null;
+  type: ActivityLogType;
+  title: string;
+  description: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export type ActivityLogType =
+  | 'lead_created'
+  | 'email_sent'
+  | 'verification'
+  | 'status_change'
+  | 'meeting_scheduled'
+  | 'meeting_completed'
+  | 'note_added'
+  | 'proposal_sent'
+  | 'follow_up_sent';
 
 export interface Testimonial {
   id: string;
