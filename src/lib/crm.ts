@@ -1,5 +1,8 @@
 import { supabase } from '@/lib/supabase';
-import type { ContactSubmission, Meeting, MeetingNote, MeetingParticipant, ActivityLog, LeadStatus } from '@/types';
+import type {
+  ContactSubmission, Meeting, MeetingNote, MeetingParticipant,
+  MeetingChatMessage, ActivityLog, LeadStatus, MeetingLiveStatus,
+} from '@/types';
 
 const CRM_API_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/crm-api`;
 const headers = () => ({
@@ -99,6 +102,20 @@ export async function getMeetingById(id: string): Promise<Meeting | null> {
   return data as Meeting | null;
 }
 
+export async function updateMeetingStatus(id: string, status: MeetingLiveStatus): Promise<boolean> {
+  const updates: Record<string, unknown> = { status };
+  if (status === 'in_progress') updates.started_at = new Date().toISOString();
+  if (status === 'completed' || status === 'cancelled') {
+    const { data: m } = await supabase.from('meetings').select('started_at').eq('id', id).maybeSingle();
+    if (m?.started_at) {
+      updates.ended_at = new Date().toISOString();
+      updates.duration_seconds = Math.round((Date.now() - new Date(m.started_at).getTime()) / 1000);
+    }
+  }
+  const { error } = await supabase.from('meetings').update(updates).eq('id', id);
+  return !error;
+}
+
 export async function scheduleMeeting(opts: {
   lead_id?: string;
   title: string;
@@ -114,6 +131,63 @@ export async function scheduleMeeting(opts: {
 
 export async function completeMeeting(meetingId: string): Promise<{ ok: boolean; error?: string }> {
   return crmApi({ action: 'complete_meeting', meeting_id: meetingId });
+}
+
+/* ----------------------- Meeting Presence ----------------------- */
+
+export async function joinMeetingAsParticipant(meetingId: string, name: string, email: string | null, role: 'host' | 'client'): Promise<MeetingParticipant | null> {
+  const { data } = await supabase
+    .from('meeting_participants')
+    .insert({
+      meeting_id: meetingId,
+      name,
+      email: email || null,
+      role,
+      is_online: true,
+      joined_at: new Date().toISOString(),
+    })
+    .select()
+    .maybeSingle();
+  if (data) {
+    await supabase.from('activity_logs').insert({
+      meeting_id: meetingId,
+      type: 'participant_joined',
+      title: `${name} joined`,
+      description: `${role === 'host' ? 'Host' : 'Client'} ${name} joined the meeting`,
+    });
+  }
+  return data as MeetingParticipant | null;
+}
+
+export async function markParticipantOffline(participantId: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('meeting_participants')
+    .update({ is_online: false, left_at: new Date().toISOString() })
+    .eq('id', participantId);
+  return !error;
+}
+
+export async function getOnlineParticipants(meetingId: string): Promise<MeetingParticipant[]> {
+  const { data } = await supabase
+    .from('meeting_participants')
+    .select('*')
+    .eq('meeting_id', meetingId)
+    .eq('is_online', true)
+    .order('joined_at', { ascending: true });
+  return (data as MeetingParticipant[]) ?? [];
+}
+
+export async function getLiveMeetings(): Promise<Meeting[]> {
+  const { data } = await supabase
+    .from('meetings')
+    .select('*')
+    .in('status', ['waiting_for_host', 'host_joined', 'client_joined', 'in_progress'])
+    .order('created_at', { ascending: false });
+  return (data as Meeting[]) ?? [];
+}
+
+export async function endMeeting(meetingId: string): Promise<{ ok: boolean; error?: string }> {
+  return crmApi({ action: 'end_meeting', meeting_id: meetingId });
 }
 
 export async function getMeetingIcs(meetingId: string): Promise<string | null> {
@@ -156,6 +230,24 @@ export async function getMeetingParticipants(meetingId: string): Promise<Meeting
     .eq('meeting_id', meetingId)
     .order('created_at', { ascending: false });
   return (data as MeetingParticipant[]) ?? [];
+}
+
+/* ----------------------- Meeting Chat ----------------------- */
+
+export async function getChatMessages(meetingId: string): Promise<MeetingChatMessage[]> {
+  const { data } = await supabase
+    .from('meeting_chat_messages')
+    .select('*')
+    .eq('meeting_id', meetingId)
+    .order('created_at', { ascending: true });
+  return (data as MeetingChatMessage[]) ?? [];
+}
+
+export async function sendChatMessage(meetingId: string, senderName: string, senderRole: 'host' | 'client', message: string): Promise<boolean> {
+  const { error } = await supabase
+    .from('meeting_chat_messages')
+    .insert({ meeting_id: meetingId, sender_name: senderName, sender_role: senderRole, message });
+  return !error;
 }
 
 /* ----------------------------- Activity ----------------------------- */

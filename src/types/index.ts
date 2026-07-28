@@ -110,6 +110,15 @@ export type LeadStatus =
 
 export type MeetingStatus = 'none' | 'scheduled' | 'completed' | 'cancelled';
 
+export type MeetingLiveStatus =
+  | 'scheduled'
+  | 'waiting_for_host'
+  | 'host_joined'
+  | 'client_joined'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled';
+
 export interface Meeting {
   id: string;
   lead_id: string | null;
@@ -121,10 +130,13 @@ export interface Meeting {
   meeting_date: string;
   meeting_time: string;
   duration: number;
-  status: 'scheduled' | 'completed' | 'cancelled';
+  status: MeetingLiveStatus;
   created_by: string | null;
   created_at: string;
   updated_at: string;
+  started_at: string | null;
+  ended_at: string | null;
+  duration_seconds: number | null;
 }
 
 export interface MeetingNote {
@@ -141,6 +153,19 @@ export interface MeetingParticipant {
   email: string;
   name: string | null;
   rsvp_status: 'pending' | 'accepted' | 'declined';
+  role: 'host' | 'client';
+  joined_at: string | null;
+  left_at: string | null;
+  is_online: boolean;
+  created_at: string;
+}
+
+export interface MeetingChatMessage {
+  id: string;
+  meeting_id: string;
+  sender_name: string;
+  sender_role: 'host' | 'client';
+  message: string;
   created_at: string;
 }
 
@@ -162,6 +187,10 @@ export type ActivityLogType =
   | 'status_change'
   | 'meeting_scheduled'
   | 'meeting_completed'
+  | 'meeting_started'
+  | 'meeting_ended'
+  | 'participant_joined'
+  | 'participant_left'
   | 'note_added'
   | 'proposal_sent'
   | 'follow_up_sent';

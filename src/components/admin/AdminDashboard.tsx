@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { FolderKanban, FileText, Tags, Users, Eye, Mail, Video, CheckCircle2, Clock } from 'lucide-react';
+import { FolderKanban, FileText, Tags, Users, Eye, Mail, Video, CheckCircle2, Clock, Radio, Hourglass } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface Stats {
@@ -13,18 +13,21 @@ interface Stats {
   subscribers: number;
   pendingVerification: number;
   scheduledMeetings: number;
+  liveMeetings: number;
+  waitingMeetings: number;
 }
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({
     projects: 0, posts: 0, skills: 0, leads: 0, newLeads: 0,
     pageViews: 0, subscribers: 0, pendingVerification: 0, scheduledMeetings: 0,
+    liveMeetings: 0, waitingMeetings: 0,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadStats() {
-      const [projects, posts, skills, leads, newLeads, pageViews, subscribers, pendingVerification, scheduledMeetings] = await Promise.all([
+      const [projects, posts, skills, leads, newLeads, pageViews, subscribers, pendingVerification, scheduledMeetings, liveMeetings, waitingMeetings] = await Promise.all([
         supabase.from('projects').select('id', { count: 'exact', head: true }),
         supabase.from('blog_posts').select('id', { count: 'exact', head: true }),
         supabase.from('skills').select('id', { count: 'exact', head: true }),
@@ -34,6 +37,8 @@ export default function AdminDashboard() {
         supabase.from('newsletter_subscribers').select('id', { count: 'exact', head: true }).eq('verified', true),
         supabase.from('contact_submissions').select('id', { count: 'exact', head: true }).eq('email_verified', false),
         supabase.from('meetings').select('id', { count: 'exact', head: true }).eq('status', 'scheduled'),
+        supabase.from('meetings').select('id', { count: 'exact', head: true }).in('status', ['host_joined', 'client_joined', 'in_progress']),
+        supabase.from('meetings').select('id', { count: 'exact', head: true }).eq('status', 'waiting_for_host'),
       ]);
 
       setStats({
@@ -46,6 +51,8 @@ export default function AdminDashboard() {
         subscribers: subscribers.count || 0,
         pendingVerification: pendingVerification.count || 0,
         scheduledMeetings: scheduledMeetings.count || 0,
+        liveMeetings: liveMeetings.count || 0,
+        waitingMeetings: waitingMeetings.count || 0,
       });
       setLoading(false);
     }
@@ -59,6 +66,8 @@ export default function AdminDashboard() {
     { label: 'Leads', value: stats.leads, icon: Users, to: '/admin/leads', color: 'text-rose-600 bg-rose-100 dark:bg-rose-900/30', badge: stats.newLeads > 0 ? `${stats.newLeads} new` : undefined },
     { label: 'Pending Verification', value: stats.pendingVerification, icon: Clock, to: '/admin/leads', color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30', badge: stats.pendingVerification > 0 ? 'Verify' : undefined },
     { label: 'Meetings', value: stats.scheduledMeetings, icon: Video, to: '/admin/meetings', color: 'text-violet-600 bg-violet-100 dark:bg-violet-900/30', badge: stats.scheduledMeetings > 0 ? 'Scheduled' : undefined },
+    { label: 'Live Meetings', value: stats.liveMeetings, icon: Radio, to: '/admin/meetings', color: 'text-accent-600 bg-accent-100 dark:bg-accent-900/30', badge: stats.liveMeetings > 0 ? 'Live' : undefined },
+    { label: 'Waiting Room', value: stats.waitingMeetings, icon: Hourglass, to: '/admin/meetings', color: 'text-amber-600 bg-amber-100 dark:bg-amber-900/30', badge: stats.waitingMeetings > 0 ? 'Waiting' : undefined },
     { label: 'Subscribers', value: stats.subscribers, icon: Mail, to: '/admin/subscribers', color: 'text-sky-600 bg-sky-100 dark:bg-sky-900/30' },
     { label: 'Page Views', value: stats.pageViews, icon: Eye, to: '#', color: 'text-surface-600 bg-surface-100 dark:bg-surface-800' },
   ];

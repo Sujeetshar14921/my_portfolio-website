@@ -25,6 +25,7 @@ import VerifyEmailPage from '@/pages/VerifyEmailPage';
 import UnsubscribePage from '@/pages/UnsubscribePage';
 import LeadVerifyPage from '@/pages/LeadVerifyPage';
 import MeetingPage from '@/pages/MeetingPage';
+import AdminMeetingPage from '@/pages/AdminMeetingPage';
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 
@@ -93,6 +94,7 @@ export default function App() {
               <Route path="skills" element={<AdminSkills />} />
               <Route path="leads" element={<AdminLeads />} />
               <Route path="meetings" element={<AdminMeetings />} />
+              <Route path="meetings/:meetingId" element={<AdminMeetingPage />} />
               <Route path="subscribers" element={<AdminSubscribers />} />
               <Route path="profile" element={<AdminProfile />} />
               <Route path="testimonials" element={<AdminTestimonials />} />

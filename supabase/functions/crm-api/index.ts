@@ -536,6 +536,116 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true });
     }
 
+    /* ---- End meeting (host ends, disconnect everyone, send summary) ---- */
+    if (action === "end_meeting") {
+      const meetingId = String(body.meeting_id || "");
+      if (!meetingId) return json({ error: "Meeting ID required." }, 400);
+
+      const { data: meeting } = await getSupabase()
+        .from("meetings")
+        .select("id, lead_id, title, started_at, meeting_url")
+        .eq("id", meetingId)
+        .maybeSingle();
+
+      if (!meeting) return json({ error: "Meeting not found." }, 404);
+
+      const now = new Date().toISOString();
+      let durationSeconds = 0;
+      if (meeting.started_at) {
+        durationSeconds = Math.round((Date.now() - new Date(meeting.started_at).getTime()) / 1000);
+      }
+
+      // Mark meeting completed with end time and duration
+      await getSupabase()
+        .from("meetings")
+        .update({ status: "completed", ended_at: now, duration_seconds: durationSeconds })
+        .eq("id", meetingId);
+
+      // Mark all online participants as offline
+      await getSupabase()
+        .from("meeting_participants")
+        .update({ is_online: false, left_at: now })
+        .eq("meeting_id", meetingId)
+        .eq("is_online", true);
+
+      // Get participants and notes for summary email
+      const [participantsRes, notesRes] = await Promise.all([
+        getSupabase()
+          .from("meeting_participants")
+          .select("name, email, role, joined_at, left_at")
+          .eq("meeting_id", meetingId)
+          .order("joined_at", { ascending: true }),
+        getSupabase()
+          .from("meeting_notes")
+          .select("content, created_at")
+          .eq("meeting_id", meetingId)
+          .order("created_at", { ascending: true }),
+      ]);
+
+      const participants = participantsRes.data || [];
+      const notes = notesRes.data || [];
+
+      // Send summary email to all participants with email
+      let emailsSent = 0;
+      for (const p of participants) {
+        if (!p.email) continue;
+        const participantListHtml = participants
+          .map(pp => `<li style="padding:4px 0;"><strong>${pp.name}</strong> (${pp.role === "host" ? "Host" : "Client"})</li>`)
+          .join("");
+        const notesHtml = notes.length > 0
+          ? notes.map(n => `<div style="padding:8px 12px;margin:4px 0;background:#f1f5f9;border-radius:6px;font-size:14px;">${n.content}</div>`).join("")
+          : "<p style='color:#64748b;'>No notes were recorded.</p>";
+
+        const durationMin = Math.round(durationSeconds / 60);
+        const html = `
+          <div style="font-family:Inter,Arial,sans-serif;max-width:600px;margin:0 auto;padding:24px;">
+            <div style="text-align:center;margin-bottom:24px;">
+              <h1 style="color:#0f172a;font-size:24px;margin:0;">Meeting Summary</h1>
+              <p style="color:#64748b;margin:4px 0 0;">${meeting.title}</p>
+            </div>
+            <div style="background:#f8fafc;border-radius:12px;padding:20px;margin-bottom:16px;">
+              <table style="width:100%;font-size:14px;color:#334155;">
+                <tr><td style="padding:4px 0;color:#64748b;">Date</td><td style="padding:4px 0;font-weight:600;text-align:right;">${new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</td></tr>
+                <tr><td style="padding:4px 0;color:#64748b;">Duration</td><td style="padding:4px 0;font-weight:600;text-align:right;">${durationMin} minutes</td></tr>
+                <tr><td style="padding:4px 0;color:#64748b;">Participants</td><td style="padding:4px 0;font-weight:600;text-align:right;">${participants.length}</td></tr>
+              </table>
+            </div>
+            <div style="margin-bottom:16px;">
+              <h3 style="color:#0f172a;font-size:16px;margin:0 0 8px;">Participants</h3>
+              <ul style="list-style:none;padding:0;margin:0;font-size:14px;color:#334155;">${participantListHtml}</ul>
+            </div>
+            <div style="margin-bottom:24px;">
+              <h3 style="color:#0f172a;font-size:16px;margin:0 0 8px;">Meeting Notes</h3>
+              ${notesHtml}
+            </div>
+            <div style="text-align:center;padding-top:16px;border-top:1px solid #e2e8f0;">
+              <p style="color:#64748b;font-size:12px;">This summary was automatically generated.</p>
+            </div>
+          </div>
+        `;
+        const sent = await sendEmail(p.email, `Meeting Summary: ${meeting.title}`, html);
+        if (sent) emailsSent++;
+      }
+
+      // Update lead status
+      if (meeting.lead_id) {
+        await getSupabase()
+          .from("contact_submissions")
+          .update({ meeting_status: "completed", status: "meeting_completed" })
+          .eq("id", meeting.lead_id);
+      }
+
+      await logActivity({
+        lead_id: meeting.lead_id,
+        meeting_id: meeting.id,
+        type: "meeting_ended",
+        title: `Meeting Ended: ${meeting.title}`,
+        description: `Duration: ${Math.round(durationSeconds / 60)} min, ${participants.length} participants, ${emailsSent} summary emails sent.`,
+      });
+
+      return json({ ok: true, duration_seconds: durationSeconds, participants: participants.length, emails_sent: emailsSent });
+    }
+
     return json({ error: "Unknown action." }, 400);
   } catch (err) {
     console.error("crm-api error", err);
