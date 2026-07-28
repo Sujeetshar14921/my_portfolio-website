@@ -158,7 +158,8 @@ export default function MeetingPage() {
   // Download ICS
   useEffect(() => {
     if (meeting) {
-      const dt = new Date(`${meeting.meeting_date}T${meeting.meeting_time}:00`);
+      const timeStr = meeting.meeting_time.split(':').slice(0, 2).join(':');
+      const dt = new Date(`${meeting.meeting_date}T${timeStr}:00`);
       const dtEnd = new Date(dt.getTime() + meeting.duration * 60000);
       const fmt = (d: Date) => d.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
       const ics = [
