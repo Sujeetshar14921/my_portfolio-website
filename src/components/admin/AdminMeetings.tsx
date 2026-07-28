@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Users, Video, CheckCircle2, Plus, Video as VideoIcon, Radio, Hourglass } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Calendar, Clock, Users, Video, CheckCircle2, Plus, Video as VideoIcon, Radio, Hourglass, Trash2, AlertCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import type { Meeting, MeetingLiveStatus } from '@/types';
-import { getAllMeetings, completeMeeting } from '@/lib/crm';
+import { getAllMeetings, completeMeeting, deleteMeeting } from '@/lib/crm';
 import ScheduleMeetingModal from './ScheduleMeetingModal';
 
 const statusConfig: Record<MeetingLiveStatus, { color: string; label: string; icon: typeof Radio }> = {
@@ -26,6 +27,8 @@ export default function AdminMeetings() {
   const [filter, setFilter] = useState<'all' | 'scheduled' | 'live' | 'completed'>('all');
   const [showModal, setShowModal] = useState(false);
   const [onlineCounts, setOnlineCounts] = useState<Record<string, number>>({});
+  const [deleteTarget, setDeleteTarget] = useState<Meeting | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     const data = await getAllMeetings();
@@ -58,6 +61,17 @@ export default function AdminMeetings() {
   const handleComplete = async (id: string) => {
     await completeMeeting(id);
     load();
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const ok = await deleteMeeting(deleteTarget.id);
+    setDeleting(false);
+    if (ok) {
+      setMeetings(prev => prev.filter(m => m.id !== deleteTarget.id));
+      setDeleteTarget(null);
+    }
   };
 
   const isLive = (s: MeetingLiveStatus) => ['waiting_for_host', 'host_joined', 'client_joined', 'in_progress'].includes(s);
@@ -160,7 +174,7 @@ export default function AdminMeetings() {
                   )}
                 </div>
 
-                <div className="flex gap-3 mt-4 pt-3 border-t border-surface-200 dark:border-surface-700">
+                <div className="flex items-center gap-3 mt-4 pt-3 border-t border-surface-200 dark:border-surface-700">
                   <Link
                     to={`/admin/meetings/${m.id}`}
                     className="flex items-center gap-1.5 text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
@@ -172,6 +186,12 @@ export default function AdminMeetings() {
                       <CheckCircle2 size={12} /> Mark completed
                     </button>
                   )}
+                  <button
+                    onClick={() => setDeleteTarget(m)}
+                    className="flex items-center gap-1 text-xs text-surface-400 hover:text-red-600 dark:hover:text-red-400 hover:underline ml-auto"
+                  >
+                    <Trash2 size={12} /> Delete
+                  </button>
                 </div>
               </div>
             );
@@ -184,6 +204,49 @@ export default function AdminMeetings() {
         onClose={() => setShowModal(false)}
         onCreated={() => { load(); setShowModal(false); }}
       />
+
+      {/* Delete confirmation modal */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => !deleting && setDeleteTarget(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 max-w-sm w-full p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <AlertCircle className="text-red-600" size={20} />
+                </div>
+                <h2 className="text-lg font-bold">Delete Meeting?</h2>
+              </div>
+              <p className="text-sm text-surface-500 mb-6">
+                This will permanently delete <strong>{deleteTarget.title}</strong>, along with its notes, chat history, and participant records. This cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-surface-200 dark:border-surface-700 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-900 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

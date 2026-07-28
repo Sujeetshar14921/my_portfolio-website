@@ -2,14 +2,14 @@ import { useEffect, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare, Mail, Phone, Building2, DollarSign, Briefcase,
-  CheckCircle2, Clock, Calendar, Video, FileText, Send, X,
+  CheckCircle2, Clock, Calendar, Video, FileText, Send, X, Trash2, AlertCircle,
   History, Video as VideoIcon, Mail as MailIcon, Activity as ActivityIcon,
 } from 'lucide-react';
 import type { ContactSubmission, LeadStatus, Meeting, ActivityLog } from '@/types';
 import {
   getAllLeads, updateLeadStatus, updateLeadNotes, updateLeadField,
   resendVerificationEmail, getMeetingsForLead, getActivityForLead,
-  sendProposal, sendFollowUp, completeMeeting,
+  sendProposal, sendFollowUp, completeMeeting, deleteLead,
 } from '@/lib/crm';
 import ScheduleMeetingModal from './ScheduleMeetingModal';
 
@@ -64,6 +64,8 @@ export default function AdminLeads() {
   const [showFollowupModal, setShowFollowupModal] = useState(false);
   const [resending, setResending] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<ContactSubmission | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const load = useCallback(async () => {
     const data = await getAllLeads();
@@ -160,6 +162,21 @@ export default function AdminLeads() {
     }
   };
 
+  const handleDeleteLead = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const ok = await deleteLead(deleteTarget.id);
+    setDeleting(false);
+    if (ok) {
+      setLeads(prev => prev.filter(l => l.id !== deleteTarget.id));
+      if (selected?.id === deleteTarget.id) setSelected(null);
+      showToast('Lead deleted');
+      setDeleteTarget(null);
+    } else {
+      showToast('Could not delete lead');
+    }
+  };
+
   if (loading) return <div className="animate-pulse text-surface-400">Loading...</div>;
 
   return (
@@ -201,15 +218,24 @@ export default function AdminLeads() {
                   <div className="text-sm text-surface-500 truncate">{lead.email}</div>
                   <p className="text-sm text-surface-600 dark:text-surface-400 mt-1 line-clamp-2">{lead.message}</p>
                 </div>
-                <div className="text-right shrink-0 space-y-1.5">
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium block ${statusColors[lead.status] || statusColors.new}`}>
-                    {lead.status.replace(/_/g, ' ')}
-                  </span>
-                  {lead.meeting_status !== 'none' && (
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium block ${meetingStatusColors[lead.meeting_status]}`}>
-                      {lead.meeting_status.replace(/_/g, ' ')}
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <button
+                    onClick={e => { e.stopPropagation(); setDeleteTarget(lead); }}
+                    title="Delete lead"
+                    className="p-1.5 rounded-lg text-surface-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                  <div className="text-right space-y-1.5">
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium block ${statusColors[lead.status] || statusColors.new}`}>
+                      {lead.status.replace(/_/g, ' ')}
                     </span>
-                  )}
+                    {lead.meeting_status !== 'none' && (
+                      <span className={`px-2 py-1 rounded-full text-xs font-medium block ${meetingStatusColors[lead.meeting_status]}`}>
+                        {lead.meeting_status.replace(/_/g, ' ')}
+                      </span>
+                    )}
+                  </div>
                 </div>
               </div>
               <div className="text-xs text-surface-400 mt-2">
@@ -331,6 +357,49 @@ export default function AdminLeads() {
         onSent={() => { showToast('Follow-up sent'); setShowFollowupModal(false); load(); }}
         leadId={selected?.id}
       />
+
+      {/* Delete confirmation modal */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => !deleting && setDeleteTarget(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 max-w-sm w-full p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <AlertCircle className="text-red-600" size={20} />
+                </div>
+                <h2 className="text-lg font-bold">Delete Lead?</h2>
+              </div>
+              <p className="text-sm text-surface-500 mb-6">
+                This will permanently delete <strong>{deleteTarget.name}</strong> and all related activity. Meetings will be kept but unlinked from this lead. This cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteTarget(null)}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-surface-200 dark:border-surface-700 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-900 transition-colors disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleDeleteLead}
+                  disabled={deleting}
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  {deleting ? 'Deleting...' : 'Delete'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Toast */}
       <AnimatePresence>

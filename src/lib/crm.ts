@@ -67,6 +67,11 @@ export async function resendVerificationEmail(leadId: string): Promise<{ ok: boo
   return crmApi({ action: 'send_lead_verification', lead_id: leadId });
 }
 
+export async function deleteLead(id: string): Promise<boolean> {
+  const { error } = await supabase.from('contact_submissions').delete().eq('id', id);
+  return !error;
+}
+
 export async function verifyLeadEmail(token: string): Promise<{ ok: boolean; message?: string; name?: string; error?: string }> {
   return crmApi({ action: 'verify_lead', token });
 }
@@ -131,6 +136,11 @@ export async function scheduleMeeting(opts: {
 
 export async function completeMeeting(meetingId: string): Promise<{ ok: boolean; error?: string }> {
   return crmApi({ action: 'complete_meeting', meeting_id: meetingId });
+}
+
+export async function deleteMeeting(meetingId: string): Promise<boolean> {
+  const { error } = await supabase.from('meetings').delete().eq('id', meetingId);
+  return !error;
 }
 
 /* ----------------------- Meeting Presence ----------------------- */
