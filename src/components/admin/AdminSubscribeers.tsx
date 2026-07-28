@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { NewsletterSubscriber } from '@/types';
 import { Search, Trash2, Mail, MailCheck, Loader2, Send } from 'lucide-react';
-import { getAllSubscribers, deleteSubscriber, searchSubscribers } from '@/lib/newsletter';
+import {
+  getAllSubscribers, deleteSubscriber, searchSubscribers,
+} from '@/lib/newsletter';
 
 export default function AdminSubscribers() {
   const [subs, setSubs] = useState<NewsletterSubscriber[]>([]);

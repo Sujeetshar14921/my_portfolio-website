@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Profile, ExperienceEntry, EducationEntry } from '@/types';
+import { useProfile } from '@/lib/profile';
 import {
   Plus, Trash2, Save, Loader2, User, Briefcase, GraduationCap,
   Trophy, Upload, X, ChevronDown, ChevronUp,
@@ -13,6 +14,7 @@ const EMPTY_EDU: EducationEntry = { institution: '', degree: '', year: '' };
 type Tab = 'hero' | 'experience' | 'education' | 'achievements';
 
 export default function AdminProfile() {
+  const { refresh: refreshContext } = useProfile();
   const [profile, setProfile] = useState<Partial<Profile> | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -49,6 +51,7 @@ export default function AdminProfile() {
     }
     setSaving(false);
     setSaved(true);
+    refreshContext();
     setTimeout(() => setSaved(false), 2500);
   };
 

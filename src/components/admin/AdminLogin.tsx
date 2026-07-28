@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import { Lock, Mail, ArrowRight } from 'lucide-react';
 
 export default function AdminLogin() {
@@ -11,7 +10,6 @@ export default function AdminLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,12 +18,7 @@ export default function AdminLogin() {
 
     const fn = isSignUp ? signUp : signIn;
     const { error: err } = await fn(email, password);
-    if (err) {
-      setError(err);
-    } else {
-      navigate('/admin'); // <-- apna actual dashboard route likho
-    }
-
+    if (err) setError(err);
     setLoading(false);
   };
 
