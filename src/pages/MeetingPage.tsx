@@ -1,52 +1,48 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Video, VideoOff, Mic, MicOff, Calendar, Clock, Users, FileText,
-  LogOut, AlertCircle, Loader2, Send, CheckCircle2, MessageCircle,
+  Video, Calendar, Clock, Users, FileText, LogOut, ArrowLeft,
+  AlertCircle, Loader2, Send, UserCheck, PhoneOff,
+  CheckCircle2, Crown, User as UserIcon,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
-import { getMeetingByToken, getMeetingNotes, addMeetingNote, updateMeetingStatus, joinMeetingAsParticipant, markParticipantOffline, sendChatMessage } from '@/lib/crm';
-import type { Meeting, MeetingNote, MeetingParticipant, MeetingChatMessage, MeetingLiveStatus } from '@/types';
+import {
+  getMeetingById, updateMeetingStatus, joinMeetingAsParticipant,
+  markParticipantOffline, endMeeting, getMeetingNotes, addMeetingNote,
+} from '@/lib/crm';
+import type { Meeting, MeetingParticipant, MeetingNote, MeetingLiveStatus } from '@/types';
 import { useProfile } from '@/lib/profile';
-import { useJitsi } from '@/hooks/useJitsi';
 
-type Phase = 'loading' | 'lobby' | 'waiting' | 'meeting' | 'ended' | 'notfound';
+type Phase = 'loading' | 'lobby' | 'meeting' | 'ended' | 'notfound';
 
 function normalizeTime(t: string): string {
   return t.split(':').slice(0, 2).join(':');
 }
 
-function isHostPresent(status: MeetingLiveStatus): boolean {
-  return status === 'host_joined' || status === 'client_joined' || status === 'in_progress';
-}
-
-export default function MeetingPage() {
+export default function AdminMeetingPage() {
   const { meetingId } = useParams<{ meetingId: string }>();
+  const navigate = useNavigate();
   const { profile } = useProfile();
   const [phase, setPhase] = useState<Phase>('loading');
   const [meeting, setMeeting] = useState<Meeting | null>(null);
-  const [displayName, setDisplayName] = useState('');
-  const [camOn, setCamOn] = useState(false);
-  const [micOn, setMicOn] = useState(false);
-  const [videoStream, setVideoStream] = useState<MediaStream | null>(null);
+  const [participants, setParticipants] = useState<MeetingParticipant[]>([]);
   const [notes, setNotes] = useState<MeetingNote[]>([]);
   const [noteInput, setNoteInput] = useState('');
-  const [chatMessages, setChatMessages] = useState<MeetingChatMessage[]>([]);
-  const [chatInput, setChatInput] = useState('');
-  const [participants, setParticipants] = useState<MeetingParticipant[]>([]);
-  const [activeTab, setActiveTab] = useState<'notes' | 'chat'>('chat');
+  const [activeTab, setActiveTab] = useState<'participants' | 'notes'>('participants');
   const [myParticipantId, setMyParticipantId] = useState<string | null>(null);
+  const [showEndConfirm, setShowEndConfirm] = useState(false);
+  const [endingMeeting, setEndingMeeting] = useState(false);
+  const [waitingClients, setWaitingClients] = useState(0);
+  const [notification, setNotification] = useState<string | null>(null);
   const [pendingMeeting, setPendingMeeting] = useState<Meeting | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+
   const jitsiRef = useRef<HTMLDivElement>(null);
   const jitsiApiRef = useRef<unknown>(null);
+  const jitsiResizeObserverRef = useRef<ResizeObserver | null>(null);
   const phaseRef = useRef<Phase>('loading');
   const myParticipantRef = useRef<string | null>(null);
 
-  const jitsi = useJitsi();
-
-  // Keep refs in sync
   useEffect(() => { phaseRef.current = phase; }, [phase]);
   useEffect(() => { myParticipantRef.current = myParticipantId; }, [myParticipantId]);
 
@@ -54,7 +50,7 @@ export default function MeetingPage() {
   useEffect(() => {
     if (!meetingId) { setPhase('notfound'); return; }
     (async () => {
-      const m = await getMeetingByToken(meetingId);
+      const m = await getMeetingById(meetingId);
       if (!m) { setPhase('notfound'); return; }
       setMeeting(m);
       if (m.status === 'completed' || m.status === 'cancelled') {
@@ -62,46 +58,26 @@ export default function MeetingPage() {
       } else {
         setPhase('lobby');
       }
-      const n = await getMeetingNotes(m.id);
+      const [n, p] = await Promise.all([
+        getMeetingNotes(m.id),
+        supabase.from('meeting_participants').select('*').eq('meeting_id', m.id).order('joined_at', { ascending: true }),
+      ]);
       setNotes(n);
+      if (p.data) setParticipants(p.data as MeetingParticipant[]);
     })();
   }, [meetingId]);
 
-  // Camera preview in lobby
-  useEffect(() => {
-    if (phase === 'lobby' && camOn) {
-      navigator.mediaDevices.getUserMedia({ video: true, audio: micOn })
-        .then(stream => {
-          setVideoStream(stream);
-          if (videoRef.current) videoRef.current.srcObject = stream;
-        })
-        .catch(() => setCamOn(false));
-    }
-    return () => {
-      if (videoStream) {
-        videoStream.getTracks().forEach(t => t.stop());
-        setVideoStream(null);
-      }
-    };
-  }, [camOn, micOn, phase]);
-
-  // Realtime: subscribe to meeting status + participants + chat
+  // Realtime subscriptions
   useEffect(() => {
     if (!meeting) return;
-    const channelId = `client-meeting-${meeting.id}`;
 
     const channel = supabase
-      .channel(channelId)
+      .channel(`admin-meeting-${meeting.id}`)
       .on('postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'meetings', filter: `id=eq.${meeting.id}` },
         (payload) => {
           const updated = payload.new as Meeting;
           setMeeting(updated);
-          // If host joins, move from waiting to meeting
-          if (phaseRef.current === 'waiting' && isHostPresent(updated.status)) {
-            enterJitsi(updated);
-          }
-          // If meeting ends
           if (updated.status === 'completed' || updated.status === 'cancelled') {
             leaveJitsi();
             setPhase('ended');
@@ -112,43 +88,38 @@ export default function MeetingPage() {
         { event: '*', schema: 'public', table: 'meeting_participants', filter: `meeting_id=eq.${meeting.id}` },
         (payload) => {
           if (payload.eventType === 'INSERT') {
-            setParticipants(prev => [...prev, payload.new as MeetingParticipant]);
+            const p = payload.new as MeetingParticipant;
+            setParticipants(prev => [...prev, p]);
+            if (p.role === 'client' && p.is_online) {
+              showNotification(`${p.name} joined the meeting`);
+              setWaitingClients(c => c + 1);
+            }
           } else if (payload.eventType === 'UPDATE') {
             const p = payload.new as MeetingParticipant;
-            setParticipants(prev => prev.map(x => x.id === p.id ? p : x));
+            setParticipants(prev => {
+              const existing = prev.find(x => x.id === p.id);
+              if (existing?.is_online && !p.is_online && p.role === 'client') {
+                showNotification(`${p.name} left the meeting`);
+              }
+              return prev.map(x => x.id === p.id ? p : x);
+            });
           }
-        }
-      )
-      .on('postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'meeting_chat_messages', filter: `meeting_id=eq.${meeting.id}` },
-        (payload) => {
-          setChatMessages(prev => [...prev, payload.new as MeetingChatMessage]);
         }
       )
       .subscribe();
 
-    // Initial load of participants + chat
-    (async () => {
-      const [p, c] = await Promise.all([
-        supabase.from('meeting_participants').select('*').eq('meeting_id', meeting.id).eq('is_online', true),
-        supabase.from('meeting_chat_messages').select('*').eq('meeting_id', meeting.id).order('created_at', { ascending: true }),
-      ]);
-      if (p.data) setParticipants(p.data as MeetingParticipant[]);
-      if (c.data) setChatMessages(c.data as MeetingChatMessage[]);
-    })();
-
     return () => { supabase.removeChannel(channel); };
   }, [meeting?.id]);
 
+  const showNotification = (msg: string) => {
+    setNotification(msg);
+    setTimeout(() => setNotification(null), 4000);
+  };
+
   const enterJitsi = useCallback((m: Meeting) => {
-    // Stop lobby preview stream before switching phase
-    if (videoStream) {
-      videoStream.getTracks().forEach(t => t.stop());
-      setVideoStream(null);
-    }
     setPendingMeeting(m);
     setPhase('meeting');
-  }, [videoStream]);
+  }, []);
 
   // Initialize Jitsi after React has committed the meeting phase DOM
   useEffect(() => {
@@ -174,49 +145,76 @@ export default function MeetingPage() {
         height: '100%',
         parentNode: jitsiRef.current,
         configOverwrite: {
-          startWithAudioMuted: !micOn,
-          startWithVideoMuted: !camOn,
+          startWithAudioMuted: false,
+          startWithVideoMuted: false,
           prejoinPageEnabled: false,
         },
         interfaceConfigOverwrite: {
-          TOOLBAR_BUTTONS: ['microphone', 'camera', 'desktop', 'fullscreen', 'fodeviceselection', 'hangup', 'chat', 'settings', 'raisehand', 'videoquality', 'filmstrip', 'shortcuts', 'tileview', 'videobackgroundblur', 'help'],
+          TOOLBAR_BUTTONS: ['microphone', 'camera', 'desktop', 'fullscreen', 'fodeviceselection', 'hangup', 'chat', 'settings', 'raisehand', 'videoquality', 'filmstrip', 'shortcuts', 'tileview', 'videobackgroundblur', 'help', 'mute-everyone'],
           SHOW_JITSI_WATERMARK: false,
           SHOW_WATERMARK_FOR_GUESTS: false,
           SHOW_BRAND_WATERMARK: false,
         },
-        userInfo: { displayName: displayName || 'Guest' },
+        userInfo: { displayName: profile?.name || 'Host' },
       });
+
+      // Force Jitsi to recompute its video layout against the container's
+      // real (final) size — fixes the mobile issue where only a small
+      // corner of the video is visible with the rest black.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const api = jitsiApiRef.current as any;
+      const forceRelayout = () => window.dispatchEvent(new Event('resize'));
+      api.addEventListener('videoConferenceJoined', () => {
+        setTimeout(forceRelayout, 300);
+        setTimeout(forceRelayout, 1000);
+      });
+      if (jitsiRef.current && 'ResizeObserver' in window) {
+        const ro = new ResizeObserver(() => forceRelayout());
+        ro.observe(jitsiRef.current);
+        jitsiResizeObserverRef.current = ro;
+      }
+      window.addEventListener('orientationchange', forceRelayout);
     };
     init().catch(err => console.error('Jitsi init failed', err));
-  }, [phase, pendingMeeting, micOn, camOn, displayName]);
+  }, [phase, pendingMeeting, profile?.name]);
 
   const leaveJitsi = useCallback(() => {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const api = jitsiApiRef.current as any;
     if (api?.dispose) { api.dispose(); jitsiApiRef.current = null; }
+    if (jitsiResizeObserverRef.current) {
+      jitsiResizeObserverRef.current.disconnect();
+      jitsiResizeObserverRef.current = null;
+    }
   }, []);
 
   const handleJoin = async () => {
     if (!meeting) return;
-    // Join as participant
-    const participant = await joinMeetingAsParticipant(meeting.id, displayName || 'Guest', null, 'client');
+    const participant = await joinMeetingAsParticipant(meeting.id, profile?.name || 'Host', profile?.email || null, 'host');
     if (participant) setMyParticipantId(participant.id);
 
-    // Update meeting status to waiting_for_host if not already in progress
-    if (meeting.status === 'scheduled') {
-      await updateMeetingStatus(meeting.id, 'waiting_for_host');
-    } else if (isHostPresent(meeting.status)) {
-      // Host is already present — join directly
-      enterJitsi(meeting);
-      return;
-    }
+    // Update status: if client is waiting, go to in_progress; else host_joined
+    const clientWaiting = participants.some(p => p.role === 'client' && p.is_online);
+    const newStatus: MeetingLiveStatus = clientWaiting ? 'in_progress' : 'host_joined';
+    await updateMeetingStatus(meeting.id, newStatus);
 
-    // Check if host is already online
-    const hostOnline = participants.some(p => p.role === 'host' && p.is_online);
-    if (hostOnline || isHostPresent(meeting.status)) {
-      enterJitsi(meeting);
+    enterJitsi(meeting);
+  };
+
+  const handleEndMeeting = async () => {
+    if (!meeting) return;
+    setEndingMeeting(true);
+    leaveJitsi();
+    if (myParticipantRef.current) {
+      await markParticipantOffline(myParticipantRef.current);
+    }
+    const res = await endMeeting(meeting.id);
+    setEndingMeeting(false);
+    setShowEndConfirm(false);
+    if (res.ok) {
+      setPhase('ended');
     } else {
-      setPhase('waiting');
+      showNotification(res.error || 'Could not end meeting');
     }
   };
 
@@ -225,7 +223,7 @@ export default function MeetingPage() {
     if (myParticipantRef.current) {
       await markParticipantOffline(myParticipantRef.current);
     }
-    setPhase('ended');
+    navigate('/admin/meetings');
   };
 
   // Cleanup on unmount
@@ -248,11 +246,8 @@ export default function MeetingPage() {
     }
   };
 
-  const handleSendChat = async () => {
-    if (!meeting || !chatInput.trim()) return;
-    await sendChatMessage(meeting.id, displayName || 'Guest', 'client', chatInput.trim());
-    setChatInput('');
-  };
+  const onlineParticipants = participants.filter(p => p.is_online);
+  const onlineClients = onlineParticipants.filter(p => p.role === 'client');
 
   if (phase === 'loading') {
     return (
@@ -268,8 +263,7 @@ export default function MeetingPage() {
         <div className="max-w-md w-full text-center">
           <AlertCircle className="mx-auto text-red-500 mb-4" size={48} />
           <h1 className="text-xl font-bold mb-2">Meeting Not Found</h1>
-          <p className="text-surface-500 text-sm mb-6">This meeting link is invalid or no longer available.</p>
-          <Link to="/" className="inline-block px-6 py-3 rounded-xl gradient-bg text-white text-sm font-semibold">Back to Home</Link>
+          <Link to="/admin/meetings" className="inline-block px-6 py-3 rounded-xl gradient-bg text-white text-sm font-semibold">Back to Meetings</Link>
         </div>
       </div>
     );
@@ -281,80 +275,115 @@ export default function MeetingPage() {
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="max-w-md w-full text-center"
+          className="max-w-md w-full"
         >
-          <div className="w-16 h-16 rounded-full bg-accent-100 dark:bg-accent-900/30 flex items-center justify-center mx-auto mb-4">
-            <CheckCircle2 className="text-accent-600" size={32} />
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 rounded-full bg-accent-100 dark:bg-accent-900/30 flex items-center justify-center mx-auto mb-4">
+              <CheckCircle2 className="text-accent-600" size={32} />
+            </div>
+            <h1 className="text-xl font-bold mb-2">Meeting Ended</h1>
+            <p className="text-surface-500 text-sm">Meeting summary has been sent to all participants.</p>
           </div>
-          <h1 className="text-xl font-bold mb-2">Meeting Ended</h1>
-          <p className="text-surface-500 text-sm mb-6">Thanks for joining! A summary will be sent to your email shortly.</p>
-          <Link to="/" className="inline-block px-6 py-3 rounded-xl gradient-bg text-white text-sm font-semibold">Back to Home</Link>
+
+          {meeting && (
+            <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-5 space-y-3">
+              <h3 className="font-semibold text-sm mb-3">Meeting Summary</h3>
+              <div className="text-sm text-surface-500 space-y-2">
+                <div className="flex justify-between"><span>Title</span><span className="font-medium text-surface-700 dark:text-surface-300">{meeting.title}</span></div>
+                <div className="flex justify-between"><span>Date</span><span className="font-medium text-surface-700 dark:text-surface-300">{new Date(meeting.meeting_date).toLocaleDateString()}</span></div>
+                <div className="flex justify-between"><span>Duration</span><span className="font-medium text-surface-700 dark:text-surface-300">{meeting.duration_seconds ? `${Math.round(meeting.duration_seconds / 60)} min` : '—'}</span></div>
+                <div className="flex justify-between"><span>Participants</span><span className="font-medium text-surface-700 dark:text-surface-300">{participants.length}</span></div>
+                <div className="flex justify-between"><span>Notes</span><span className="font-medium text-surface-700 dark:text-surface-300">{notes.length}</span></div>
+              </div>
+              <Link to="/admin/meetings" className="block text-center px-4 py-2.5 rounded-lg gradient-bg text-white text-sm font-semibold mt-4">
+                Back to Meetings
+              </Link>
+            </div>
+          )}
         </motion.div>
       </div>
     );
   }
 
-  /* =================== LOBBY =================== */
+  /* =================== LOBBY (admin) =================== */
   if (phase === 'lobby' && meeting) {
     return (
       <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex flex-col">
-        <nav className="border-b border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 px-6 py-3">
-          <Link to="/" className="text-lg font-bold gradient-text">{profile?.name || 'Portfolio'}</Link>
+        <nav className="border-b border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 px-4 py-2.5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Link to="/admin/meetings" className="p-1.5 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors">
+              <ArrowLeft size={18} />
+            </Link>
+            <span className="text-base font-bold gradient-text">Admin Meeting</span>
+          </div>
         </nav>
 
         <div className="flex-1 flex items-center justify-center p-6">
-          <div className="max-w-3xl w-full grid md:grid-cols-2 gap-8 items-center">
-            <div className="relative aspect-video rounded-2xl bg-surface-800 dark:bg-surface-900 border border-surface-200 dark:border-surface-700 overflow-hidden">
-              {camOn ? (
-                <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-full text-surface-400">
-                  <VideoOff size={40} />
-                  <span className="text-sm mt-2">Camera is off</span>
+          <div className="max-w-2xl w-full">
+            <div className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 p-8">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-12 h-12 rounded-xl gradient-bg flex items-center justify-center">
+                  <Video className="text-white" size={24} />
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold">{meeting.title}</h1>
+                  <p className="text-sm text-surface-500">Ready to join as Host</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="rounded-xl bg-surface-50 dark:bg-surface-900 p-3">
+                  <div className="flex items-center gap-2 text-xs text-surface-400 mb-1"><Calendar size={12} /> Date & Time</div>
+                  <div className="text-sm font-medium">{new Date(meeting.meeting_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {normalizeTime(meeting.meeting_time)}</div>
+                </div>
+                <div className="rounded-xl bg-surface-50 dark:bg-surface-900 p-3">
+                  <div className="flex items-center gap-2 text-xs text-surface-400 mb-1"><Clock size={12} /> Duration</div>
+                  <div className="text-sm font-medium">{meeting.duration} min</div>
+                </div>
+                <div className="rounded-xl bg-surface-50 dark:bg-surface-900 p-3">
+                  <div className="flex items-center gap-2 text-xs text-surface-400 mb-1"><Users size={12} /> Type</div>
+                  <div className="text-sm font-medium">{meeting.meeting_type === 'one_on_one' ? 'One-to-One' : 'Group'}</div>
+                </div>
+                <div className="rounded-xl bg-surface-50 dark:bg-surface-900 p-3">
+                  <div className="flex items-center gap-2 text-xs text-surface-400 mb-1"><UserCheck size={12} /> Waiting</div>
+                  <div className="text-sm font-medium">
+                    {onlineClients.length > 0 ? (
+                      <span className="text-amber-600 dark:text-amber-400">{onlineClients.length} client(s) waiting</span>
+                    ) : 'No one waiting' }
+                  </div>
+                </div>
+              </div>
+
+              {meeting.agenda && (
+                <div className="mb-6">
+                  <span className="text-xs text-surface-400 font-medium">Agenda</span>
+                  <p className="text-sm text-surface-600 dark:text-surface-400 mt-1">{meeting.agenda}</p>
                 </div>
               )}
-              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-2">
-                <button
-                  onClick={() => setCamOn(c => !c)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${camOn ? 'bg-primary-600 text-white' : 'bg-surface-600 text-white'}`}
-                >
-                  {camOn ? <Video size={18} /> : <VideoOff size={18} />}
-                </button>
-                <button
-                  onClick={() => setMicOn(m => !m)}
-                  className={`w-10 h-10 rounded-full flex items-center justify-center transition-colors ${micOn ? 'bg-primary-600 text-white' : 'bg-surface-600 text-white'}`}
-                >
-                  {micOn ? <Mic size={18} /> : <MicOff size={18} />}
-                </button>
-              </div>
-            </div>
 
-            <div className="space-y-4">
-              <div>
-                <h1 className="text-xl font-bold mb-1">{meeting.title}</h1>
-                {meeting.agenda && <p className="text-sm text-surface-500 leading-relaxed">{meeting.agenda}</p>}
-              </div>
-              <div className="space-y-1.5 text-sm text-surface-500">
-                <div className="flex items-center gap-2"><Calendar size={14} /> {new Date(meeting.meeting_date).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</div>
-                <div className="flex items-center gap-2"><Clock size={14} /> {normalizeTime(meeting.meeting_time)} ({meeting.duration} min)</div>
-                <div className="flex items-center gap-2"><Users size={14} /> {meeting.meeting_type === 'one_on_one' ? 'One-to-One' : 'Group'}</div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1.5">Your Name</label>
-                <input
-                  type="text"
-                  value={displayName}
-                  onChange={e => setDisplayName(e.target.value)}
-                  className="w-full px-4 py-2.5 rounded-xl border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-800 text-sm outline-none focus:ring-2 focus:ring-primary-500"
-                  placeholder="Enter your display name"
-                />
-              </div>
+              {/* Waiting clients list */}
+              {onlineClients.length > 0 && (
+                <div className="mb-6 rounded-xl border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 p-3">
+                  <div className="flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-300 mb-2">
+                    <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" /> Clients in Waiting Room
+                  </div>
+                  <div className="space-y-1.5">
+                    {onlineClients.map(c => (
+                      <div key={c.id} className="flex items-center gap-2 text-sm">
+                        <UserIcon size={14} className="text-amber-600" />
+                        <span>{c.name}</span>
+                        <span className="text-xs text-surface-400">joined {new Date(c.joined_at || c.created_at).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <button
                 onClick={handleJoin}
-                disabled={!displayName.trim()}
-                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl gradient-bg text-white font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 rounded-xl gradient-bg text-white font-semibold text-sm hover:opacity-90 transition-opacity"
               >
-                <Video size={18} /> Join Meeting
+                <Video size={18} /> Join as Host
               </button>
             </div>
           </div>
@@ -363,67 +392,14 @@ export default function MeetingPage() {
     );
   }
 
-  /* =================== WAITING ROOM =================== */
-  if (phase === 'waiting' && meeting) {
-    return (
-      <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex flex-col">
-        <nav className="border-b border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 px-6 py-3">
-          <Link to="/" className="text-lg font-bold gradient-text">{profile?.name || 'Portfolio'}</Link>
-        </nav>
-
-        <div className="flex-1 flex items-center justify-center p-6">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="max-w-md w-full text-center"
-          >
-            <div className="relative w-20 h-20 mx-auto mb-6">
-              <div className="absolute inset-0 rounded-full bg-primary-100 dark:bg-primary-900/30" />
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 3, repeat: Infinity, ease: 'linear' }}
-                className="absolute inset-0 rounded-full border-4 border-transparent border-t-primary-500"
-              />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <Clock className="text-primary-600" size={28} />
-              </div>
-            </div>
-            <h1 className="text-xl font-bold mb-2">Waiting for Host</h1>
-            <p className="text-surface-500 text-sm mb-6">
-              You've joined <strong>{meeting.title}</strong>. The host will be with you shortly. You'll automatically join when they arrive.
-            </p>
-            <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-4 text-left">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Your Status</span>
-                <span className="flex items-center gap-1.5 text-xs text-accent-600 dark:text-accent-400">
-                  <span className="w-2 h-2 rounded-full bg-accent-500 animate-pulse" /> In Waiting Room
-                </span>
-              </div>
-              <div className="text-xs text-surface-500">
-                Name: {displayName}<br />
-                Meeting: {meeting.title}<br />
-                Time: {normalizeTime(meeting.meeting_time)} on {new Date(meeting.meeting_date).toLocaleDateString()}
-              </div>
-            </div>
-            <button
-              onClick={handleLeave}
-              className="mt-6 text-sm text-surface-500 hover:text-red-500 transition-colors"
-            >
-              Leave waiting room
-            </button>
-          </motion.div>
-        </div>
-      </div>
-    );
-  }
-
-  /* =================== MEETING (Jitsi embedded) =================== */
+  /* =================== MEETING (admin) =================== */
   if (phase === 'meeting' && meeting) {
     return (
-      <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex flex-col">
-        <nav className="border-b border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 px-4 py-2.5 flex items-center justify-between">
+      <div className="h-[100dvh] bg-surface-50 dark:bg-surface-950 flex flex-col overflow-hidden">
+        {/* Top bar */}
+        <nav className="shrink-0 border-b border-surface-200 dark:border-surface-800 bg-white dark:bg-surface-900 px-4 py-2.5 flex items-center justify-between">
           <div className="flex items-center gap-3 min-w-0">
-            <Link to="/" className="text-base font-bold gradient-text shrink-0">{profile?.name || 'Portfolio'}</Link>
+            <span className="text-base font-bold gradient-text shrink-0">{profile?.name || 'Admin'}</span>
             <span className="text-surface-300 hidden sm:inline">|</span>
             <span className="text-sm font-medium truncate">{meeting.title}</span>
           </div>
@@ -432,99 +408,87 @@ export default function MeetingPage() {
               <span className="w-2 h-2 rounded-full bg-accent-500 animate-pulse" /> Live
             </span>
             <button
-              onClick={handleLeave}
+              onClick={() => setShowEndConfirm(true)}
               className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors"
             >
-              <LogOut size={14} /> Leave
+              <PhoneOff size={14} /> End Meeting
             </button>
           </div>
         </nav>
 
-        <div className="flex-1 flex flex-col lg:flex-row gap-2 p-2 max-h-[calc(100vh-49px)]">
+        <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-2 p-2">
           {/* Jitsi video area */}
-          <div className="flex-1 min-h-[50vh] lg:min-h-0 rounded-2xl overflow-hidden border border-surface-200 dark:border-surface-700 bg-black">
-            <div ref={jitsiRef} className="w-full h-full" style={{ minHeight: '400px' }} />
+          <div className="relative flex-1 min-h-0 rounded-2xl overflow-hidden border border-surface-200 dark:border-surface-700 bg-black">
+            <div ref={jitsiRef} className="absolute inset-0" />
           </div>
 
-          {/* Sidebar: participants + notes/chat */}
-          <div className="lg:w-80 shrink-0 flex flex-col gap-2">
-            {/* Participants */}
-            <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <Users size={14} className="text-primary-500" />
-                <h3 className="font-semibold text-sm">Participants ({participants.filter(p => p.is_online).length})</h3>
-              </div>
-              <div className="space-y-1.5 max-h-32 overflow-y-auto">
-                {participants.filter(p => p.is_online).map(p => (
-                  <div key={p.id} className="flex items-center gap-2 text-sm">
-                    <span className="w-2 h-2 rounded-full bg-accent-500" />
-                    <span className="truncate">{p.name}</span>
-                    {p.role === 'host' && <span className="text-xs text-primary-600 dark:text-primary-400 font-medium">Host</span>}
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Tabs: chat + notes */}
+          {/* Right sidebar */}
+          <div className="lg:w-80 shrink-0 flex flex-col gap-2 max-h-[38vh] lg:max-h-none lg:h-full">
+            {/* Tabs */}
             <div className="bg-white dark:bg-surface-800 rounded-xl border border-surface-200 dark:border-surface-700 flex-1 flex flex-col min-h-0">
               <div className="flex border-b border-surface-200 dark:border-surface-700">
-                <button
-                  onClick={() => setActiveTab('chat')}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors ${
-                    activeTab === 'chat' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-surface-500'
-                  }`}
-                >
-                  <MessageCircle size={14} /> Chat
-                </button>
-                <button
-                  onClick={() => setActiveTab('notes')}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-medium border-b-2 transition-colors ${
-                    activeTab === 'notes' ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-surface-500'
-                  }`}
-                >
-                  <FileText size={14} /> Notes
-                </button>
+                {([
+                  { id: 'participants', label: `People (${onlineParticipants.length})`, icon: Users },
+                  { id: 'notes', label: 'Notes', icon: FileText },
+                ] as { id: typeof activeTab; label: string; icon: typeof Users }[]).map(tab => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 flex items-center justify-center gap-1 py-2.5 text-xs font-medium border-b-2 transition-colors ${
+                      activeTab === tab.id ? 'border-primary-500 text-primary-600 dark:text-primary-400' : 'border-transparent text-surface-500'
+                    }`}
+                  >
+                    <tab.icon size={14} /> <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                ))}
               </div>
 
               <div className="flex-1 p-3 min-h-0 flex flex-col">
-                {activeTab === 'chat' && (
-                  <>
-                    <div className="flex-1 overflow-y-auto space-y-2 mb-2 min-h-0">
-                      {chatMessages.length === 0 ? (
-                        <p className="text-xs text-surface-400 text-center py-4">No messages yet. Say hello!</p>
-                      ) : chatMessages.map(msg => (
-                        <div key={msg.id} className={`flex flex-col ${msg.sender_role === 'host' ? 'items-start' : 'items-end'}`}>
-                          <div className={`max-w-[80%] rounded-lg px-2.5 py-1.5 text-xs ${
-                            msg.sender_role === 'host'
-                              ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-800 dark:text-primary-200'
-                              : 'bg-surface-100 dark:bg-surface-700 text-surface-700 dark:text-surface-300'
-                          }`}>
-                            <span className="font-medium block text-[10px] mb-0.5 opacity-70">{msg.sender_name}</span>
-                            {msg.message}
-                          </div>
+                {/* Participants tab */}
+                {activeTab === 'participants' && (
+                  <div className="flex-1 overflow-y-auto space-y-2 min-h-0">
+                    <div className="text-xs text-surface-400 font-medium mb-1">Online ({onlineParticipants.length})</div>
+                    {onlineParticipants.map(p => (
+                      <div key={p.id} className="flex items-center gap-2.5 rounded-lg p-2 hover:bg-surface-50 dark:hover:bg-surface-900 transition-colors">
+                        <div className="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center shrink-0">
+                          {p.role === 'host' ? <Crown size={14} className="text-primary-600" /> : <UserIcon size={14} className="text-surface-500" />}
                         </div>
-                      ))}
-                    </div>
-                    <div className="flex gap-1.5">
-                      <input
-                        value={chatInput}
-                        onChange={e => setChatInput(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') handleSendChat(); }}
-                        className="flex-1 px-2.5 py-1.5 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 text-xs outline-none focus:ring-2 focus:ring-primary-500"
-                        placeholder="Type a message..."
-                      />
-                      <button onClick={handleSendChat} disabled={!chatInput.trim()} className="p-1.5 rounded-lg bg-primary-600 text-white disabled:opacity-50">
-                        <Send size={12} />
-                      </button>
-                    </div>
-                  </>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-sm font-medium truncate">{p.name}</div>
+                          <div className="text-xs text-surface-400">{p.role === 'host' ? 'Host' : 'Client'}</div>
+                        </div>
+                        <span className="w-2 h-2 rounded-full bg-accent-500 shrink-0" />
+                      </div>
+                    ))}
+                    {onlineParticipants.length === 0 && (
+                      <p className="text-xs text-surface-400 text-center py-4">No one online.</p>
+                    )}
+
+                    {participants.filter(p => !p.is_online).length > 0 && (
+                      <>
+                        <div className="text-xs text-surface-400 font-medium mt-3 mb-1">Left</div>
+                        {participants.filter(p => !p.is_online).map(p => (
+                          <div key={p.id} className="flex items-center gap-2.5 rounded-lg p-2 opacity-50">
+                            <div className="w-8 h-8 rounded-full bg-surface-100 dark:bg-surface-700 flex items-center justify-center shrink-0">
+                              <UserIcon size={14} className="text-surface-400" />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-medium truncate">{p.name}</div>
+                              <div className="text-xs text-surface-400">{p.role === 'host' ? 'Host' : 'Client'}</div>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
                 )}
 
+                {/* Notes tab */}
                 {activeTab === 'notes' && (
                   <>
                     <div className="flex-1 overflow-y-auto space-y-2 mb-2 min-h-0">
                       {notes.length === 0 ? (
-                        <p className="text-xs text-surface-400 text-center py-4">No notes yet.</p>
+                        <p className="text-xs text-surface-400 text-center py-4">No notes yet. Add key points during the meeting.</p>
                       ) : notes.map(n => (
                         <div key={n.id} className="text-xs rounded-lg bg-surface-50 dark:bg-surface-900 p-2.5">
                           <p className="text-surface-600 dark:text-surface-400">{n.content}</p>
@@ -550,9 +514,70 @@ export default function MeetingPage() {
             </div>
           </div>
         </div>
-      </div>
-    );
+
+      {/* End Meeting confirmation modal */}
+      <AnimatePresence>
+        {showEndConfirm && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+            onClick={() => setShowEndConfirm(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white dark:bg-surface-800 rounded-2xl border border-surface-200 dark:border-surface-700 max-w-sm w-full p-6"
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-xl bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                  <PhoneOff className="text-red-600" size={20} />
+                </div>
+                <h2 className="text-lg font-bold">End Meeting?</h2>
+              </div>
+              <p className="text-sm text-surface-500 mb-6">
+                This will disconnect all participants, save meeting notes, and send a summary email. This cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowEndConfirm(false)}
+                  className="flex-1 px-4 py-2.5 rounded-lg border border-surface-200 dark:border-surface-700 text-sm font-medium hover:bg-surface-50 dark:hover:bg-surface-900 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleEndMeeting}
+                  disabled={endingMeeting}
+                  className="flex-1 px-4 py-2.5 rounded-lg bg-red-500 text-white text-sm font-semibold hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  {endingMeeting ? 'Ending...' : 'End Meeting'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Toast notification */}
+      <AnimatePresence>
+        {notification && (
+          <motion.div
+            initial={{ opacity: 0, y: 20, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 20, x: '-50%' }}
+            className="fixed bottom-6 left-1/2 px-4 py-2.5 rounded-lg bg-surface-900 dark:bg-surface-100 text-white dark:text-surface-900 text-sm font-medium shadow-lg z-50 flex items-center gap-2"
+          >
+            <UserCheck size={16} />
+            {notification}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
   }
 
-  return null;
+  return (
+    <div className="min-h-screen bg-surface-50 dark:bg-surface-950 flex items-center justify-center">
+      <Loader2 className="animate-spin text-primary-500" size={32} />
+    </div>
+  );
 }
