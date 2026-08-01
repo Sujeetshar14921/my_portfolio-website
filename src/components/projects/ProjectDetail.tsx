@@ -2,6 +2,8 @@ import { motion } from "framer-motion";
 import { ArrowLeft, ExternalLink, FileText, Download } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/BrandIcons";
 import { Link, useParams } from "react-router-dom";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Project } from "@/types";
 
 interface ProjectDetailProps {
@@ -91,7 +93,9 @@ export default function ProjectDetail({ projects }: ProjectDetailProps) {
               </h1>
 
               {/* description */}
-              <p className="text-surface-600 dark:text-surface-400 leading-relaxed">{project.full_description}</p>
+              <div className="prose-custom">
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{project.full_description || ''}</ReactMarkdown>
+              </div>
 
               {/* Case Study SAFE */}
               {project?.case_study && (

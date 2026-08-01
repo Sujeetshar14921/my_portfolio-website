@@ -33,7 +33,7 @@ export default function AdminDashboard() {
         supabase.from('skills').select('id', { count: 'exact', head: true }),
         supabase.from('contact_submissions').select('id', { count: 'exact', head: true }),
         supabase.from('contact_submissions').select('id', { count: 'exact', head: true }).eq('status', 'new'),
-        supabase.from('page_views').select('id', { count: 'exact', head: true }),
+        supabase.from('page_views').select('id', { count: 'exact', head: true }).not('page_path', 'like', '/admin%'),
         supabase.from('newsletter_subscribers').select('id', { count: 'exact', head: true }).eq('verified', true),
         supabase.from('contact_submissions').select('id', { count: 'exact', head: true }).eq('email_verified', false),
         supabase.from('meetings').select('id', { count: 'exact', head: true }).eq('status', 'scheduled'),

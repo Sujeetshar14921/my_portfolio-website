@@ -20,7 +20,6 @@ import AdminLeads from '@/components/admin/AdminLeads';
 import AdminMeetings from '@/components/admin/AdminMeetings';
 import AdminProfile from '@/components/admin/AdminProfile';
 import AdminTestimonials from '@/components/admin/AdminTestimonials';
-import AdminSubscribers from './components/admin/AdminSubscribeers';
 import VerifyEmailPage from '@/pages/VerifyEmailPage';
 import UnsubscribePage from '@/pages/UnsubscribePage';
 import LeadVerifyPage from '@/pages/LeadVerifyPage';
@@ -28,6 +27,7 @@ import MeetingPage from '@/pages/MeetingPage';
 import AdminMeetingPage from '@/pages/AdminMeetingPage';
 import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
+import AdminSubscribers from '@/components/admin/AdminSubscribeers';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -56,6 +56,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 function TrackPageView() {
   const { pathname } = useLocation();
   useEffect(() => {
+    if (pathname.startsWith('/admin') || pathname.startsWith('/meeting') || pathname.startsWith('/verify-email') || pathname.startsWith('/newsletter')) return;
     supabase.from('page_views').insert({ page_path: pathname }).then(() => {});
   }, [pathname]);
   return null;

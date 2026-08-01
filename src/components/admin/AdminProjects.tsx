@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Project } from '@/types';
-import { Plus, Pencil, Trash2, X, ExternalLink, FileText } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, ExternalLink, FileText, Eye, Code } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import ImageUpload from '@/components/ui/ImageUpload';
 import FileUpload from '@/components/ui/FileUpload';
 
@@ -13,6 +15,7 @@ export default function AdminProjects() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<Partial<Project> | null>(null);
+  const [showMdPreview, setShowMdPreview] = useState(false);
   const [saving, setSaving] = useState(false);
   const [techInput, setTechInput] = useState('');
 
@@ -122,8 +125,29 @@ export default function AdminProjects() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1">Full Description</label>
-                <textarea value={editing.full_description || ''} onChange={e => setEditing(p => p ? { ...p, full_description: e.target.value } : p)} rows={4} className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 text-sm outline-none focus:ring-2 focus:ring-primary-500 resize-none" />
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-medium">Full Description</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowMdPreview(!showMdPreview)}
+                    className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
+                      showMdPreview
+                        ? 'bg-accent-100 dark:bg-accent-900/30 text-accent-700 dark:text-accent-300'
+                        : 'text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-700'
+                    }`}
+                  >
+                    <Eye size={14} /> {showMdPreview ? 'Hide Preview' : 'Show Preview'}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-xs text-surface-400 flex items-center gap-1"><Code size={12} /> Markdown supported</span>
+                </div>
+                <textarea value={editing.full_description || ''} onChange={e => setEditing(p => p ? { ...p, full_description: e.target.value } : p)} rows={6} className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 text-sm font-mono outline-none focus:ring-2 focus:ring-primary-500 resize-y" placeholder="## Project Overview&#10;&#10;Describe your project using **markdown**...&#10;&#10;- Feature one&#10;- Feature two" />
+                {showMdPreview && editing.full_description && (
+                  <div className="mt-3 p-4 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 prose prose-sm dark:prose-invert max-w-none overflow-auto">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{editing.full_description}</ReactMarkdown>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-2 gap-4 items-start">

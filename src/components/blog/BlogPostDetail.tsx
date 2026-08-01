@@ -1,8 +1,6 @@
 import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { BlogPost } from '@/types';
 
 interface BlogPostDetailProps {
@@ -55,13 +53,7 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
 
           {/* Content */}
           <div className="prose-custom">
-            {post.content_type === 'html' ? (
-              <div dangerouslySetInnerHTML={{ __html: post.content.replace(/\\n/g, '\n') }} />
-            ) : (
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {post.content.replace(/\\n/g, '\n')}
-              </ReactMarkdown>
-            )}
+            <div dangerouslySetInnerHTML={{ __html: post.content.replace(/\\n/g, '\n') }} />
           </div>
         </motion.div>
       </div>

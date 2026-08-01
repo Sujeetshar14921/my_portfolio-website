@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { BlogPost } from '@/types';
-import { Plus, Pencil, Trash2, X, Eye, Code, FileText } from 'lucide-react';
+import { Plus, Pencil, Trash2, X, Eye, Code } from 'lucide-react';
 import ImageUpload from '@/components/ui/ImageUpload';
 
 const emptyPost: Partial<BlogPost> = {
@@ -146,31 +146,8 @@ export default function AdminBlog() {
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="block text-sm font-medium">Content</label>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setEditing(p => p ? { ...p, content_type: 'html' } : p)}
-                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                        editing.content_type === 'html'
-                          ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                          : 'text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-700'
-                      }`}
-                    >
-                      <Code size={14} /> HTML
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEditing(p => p ? { ...p, content_type: 'markdown' } : p)}
-                      className={`flex items-center gap-1 px-2 py-1 rounded text-xs font-medium transition-colors ${
-                        editing.content_type === 'markdown'
-                          ? 'bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                          : 'text-surface-500 hover:bg-surface-100 dark:hover:bg-surface-700'
-                      }`}
-                    >
-                      <FileText size={14} /> Markdown
-                    </button>
-                  </div>
+                  <label className="block text-sm font-medium">Content (HTML)</label>
+                  <span className="text-xs text-surface-400 flex items-center gap-1"><Code size={14} /> HTML mode</span>
                 </div>
                 <div className="flex items-center gap-2 mb-2">
                   <button
@@ -184,24 +161,18 @@ export default function AdminBlog() {
                   >
                     <Eye size={14} /> {previewHtml ? 'Hide Preview' : 'Show Preview'}
                   </button>
-                  {editing.content_type === 'html' && (
-                    <span className="text-xs text-surface-400">Supports images, links, formatting</span>
-                  )}
+                  <span className="text-xs text-surface-400">Supports images, links, formatting</span>
                 </div>
                 <textarea
                   value={editing.content || ''}
                   onChange={e => setEditing(p => p ? { ...p, content: e.target.value } : p)}
                   rows={12}
                   className="w-full px-3 py-2 rounded-lg border border-surface-200 dark:border-surface-700 bg-surface-50 dark:bg-surface-900 text-sm font-mono outline-none focus:ring-2 focus:ring-primary-500 resize-y"
-                  placeholder={editing.content_type === 'html' ? '<h2>Title</h2>\n<p>Your content here...</p>\n<img src="..." alt="" />\n<a href="...">Link</a>' : 'Markdown content...'}
+                  placeholder="<h2>Title</h2>&#10;<p>Your content here...</p>&#10;<img src=&quot;...&quot; alt=&quot;&quot; />&#10;<a href=&quot;...&quot;>Link</a>"
                 />
                 {previewHtml && editing.content && (
                   <div className="mt-3 p-4 rounded-lg border border-surface-200 dark:border-surface-700 bg-white dark:bg-surface-900 prose prose-sm dark:prose-invert max-w-none overflow-auto">
-                    {editing.content_type === 'html' ? (
-                      <div dangerouslySetInnerHTML={{ __html: editing.content }} />
-                    ) : (
-                      <div className="whitespace-pre-wrap">{editing.content}</div>
-                    )}
+                    <div dangerouslySetInnerHTML={{ __html: editing.content }} />
                   </div>
                 )}
               </div>
