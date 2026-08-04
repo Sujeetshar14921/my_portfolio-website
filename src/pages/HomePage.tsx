@@ -10,9 +10,11 @@ import TestimonialsSection from '@/components/ui/TestimonialsSection';
 import ContactSection from '@/components/contact/ContactSection';
 import NewsletterSection from '@/components/ui/NewsletterSection';
 import PageSeo from '@/components/seo/PageSeo';
+import Loader from '@/components/Loader/loader';
 
 export default function HomePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [skills, setSkills] = useState<Skill[]>([]);
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -20,25 +22,31 @@ export default function HomePage() {
 
   useEffect(() => {
     async function load() {
-      const [profileRes, projectsRes, skillsRes, postsRes, testimonialsRes] = await Promise.all([
-        supabase.from('profiles').select('*').limit(1).maybeSingle(),
-        supabase.from('projects').select('*').eq('published', true).order('sort_order'),
-        supabase.from('skills').select('*').order('sort_order'),
-        supabase.from('blog_posts').select('*').eq('published', true).order('published_at', { ascending: false }),
-        supabase.from('testimonials').select('*').eq('published', true).order('sort_order'),
-      ]);
+      try {
+        const [profileRes, projectsRes, skillsRes, postsRes, testimonialsRes] = await Promise.all([
+          supabase.from('profiles').select('*').limit(1).maybeSingle(),
+          supabase.from('projects').select('*').eq('published', true).order('sort_order'),
+          supabase.from('skills').select('*').order('sort_order'),
+          supabase.from('blog_posts').select('*').eq('published', true).order('published_at', { ascending: false }),
+          supabase.from('testimonials').select('*').eq('published', true).order('sort_order'),
+        ]);
 
-      if (profileRes.data) setProfile(profileRes.data as Profile);
-      if (projectsRes.data) setProjects(projectsRes.data as Project[]);
-      if (skillsRes.data) setSkills(skillsRes.data as Skill[]);
-      if (postsRes.data) setPosts(postsRes.data as BlogPost[]);
-      if (testimonialsRes.data) setTestimonials(testimonialsRes.data as Testimonial[]);
+        if (profileRes.data) setProfile(profileRes.data as Profile);
+        if (projectsRes.data) setProjects(projectsRes.data as Project[]);
+        if (skillsRes.data) setSkills(skillsRes.data as Skill[]);
+        if (postsRes.data) setPosts(postsRes.data as BlogPost[]);
+        if (testimonialsRes.data) setTestimonials(testimonialsRes.data as Testimonial[]);
+      } finally {
+        setLoading(false);
+      }
     }
+
     load();
   }, []);
 
   return (
     <>
+      {loading && <Loader label="Loading Portfolio" />}
       <PageSeo
         title="Sujeet Sharma | Full Stack Developer"
         description="Portfolio of Sujeet Sharma featuring full stack development projects, technical blogs, and freelance web development services."

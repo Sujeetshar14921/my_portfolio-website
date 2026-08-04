@@ -28,6 +28,8 @@ import UnsubscribePage from '@/pages/UnsubscribePage';
 import LeadVerifyPage from '@/pages/LeadVerifyPage';
 import MeetingPage from '@/pages/MeetingPage';
 import AdminMeetingPage from '@/pages/AdminMeetingPage';
+import PrivacyPage from '@/pages/PrivacyPage';
+import TermsPage from '@/pages/TermsPage';
 import { supabase } from '@/lib/supabase';
 import AdminSubscribers from '@/components/admin/AdminSubscribeers';
 
@@ -74,6 +76,8 @@ export default function App() {
             <Route path="/blog" element={<Layout><BlogPage /></Layout>} />
             <Route path="/blog/:slug" element={<Layout><BlogPostPage /></Layout>} />
             <Route path="/contact" element={<Layout><ContactPage /></Layout>} />
+            <Route path="/privacy" element={<Layout><PrivacyPage /></Layout>} />
+            <Route path="/terms" element={<Layout><TermsPage /></Layout>} />
 
             {/* Newsletter public actions */}
             <Route path="/newsletter/verify" element={<VerifyEmailPage />} />

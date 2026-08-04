@@ -56,10 +56,17 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
               key={link.to}
               to={link.to}
               aria-current={location.pathname === link.to ? 'page' : undefined}
-              className={`text-sm font-medium transition-colors hover:text-primary-600 dark:hover:text-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400 rounded-sm ${location.pathname === link.to ? 'text-primary-400 dark:text-primary-600' : 'text-surface-600 dark:text-surface-400'
+              className={`group relative inline-flex items-center px-1 py-2 text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400 rounded-sm ${location.pathname === link.to ? 'text-primary-500 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400'
                 }`}
             >
-              {link.label}
+              <span className="relative">
+                <span className="transition-colors duration-300 group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                  {link.label}
+                </span>
+                <span
+                  className={`absolute left-0 -bottom-1 h-0.5 rounded-full bg-primary-500 dark:bg-primary-400 transition-all duration-300 origin-left ${location.pathname === link.to ? 'w-full scale-x-100' : 'w-full scale-x-0 group-hover:scale-x-100'}`}
+                />
+              </span>
             </Link>
           ))}
           <button
@@ -111,10 +118,17 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
                   key={link.to}
                   to={link.to}
                   aria-current={location.pathname === link.to ? 'page' : undefined}
-                  className={`text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400 rounded-sm ${location.pathname === link.to ? 'text-primary-600 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400'
+                  className={`group relative inline-flex items-center px-1 py-2 text-sm font-medium transition-all duration-300 hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400 rounded-sm ${location.pathname === link.to ? 'text-primary-600 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400'
                     }`}
                 >
-                  {link.label}
+                  <span className="relative">
+                    <span className="transition-colors duration-300 group-hover:text-primary-600 dark:group-hover:text-primary-400">
+                      {link.label}
+                    </span>
+                    <span
+                      className={`absolute left-0 -bottom-1 h-0.5 rounded-full bg-primary-500 dark:bg-primary-400 transition-all duration-300 origin-left ${location.pathname === link.to ? 'w-full scale-x-100' : 'w-full scale-x-0 group-hover:scale-x-100'}`}
+                    />
+                  </span>
                 </Link>
               ))}
             </div>

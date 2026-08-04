@@ -75,6 +75,7 @@ const Loader = ({ theme, fullscreen = true, label = 'Loading' }: LoaderProps) =>
         .loader-root[data-fullscreen='true'] {
           position: fixed;
           inset: 0;
+          z-index: 9999;
           display: grid;
           place-items: center;
           background:
@@ -82,6 +83,7 @@ const Loader = ({ theme, fullscreen = true, label = 'Loading' }: LoaderProps) =>
             radial-gradient(circle at 70% 80%, color-mix(in srgb, var(--accent-teal) 10%, transparent), transparent 55%),
             var(--bg);
           transition: background 0.4s ease;
+          isolation: isolate;
         }
 
         .loader-root[data-fullscreen='false'] {
@@ -288,5 +290,5 @@ const LoaderDemo = () => {
   );
 };
 
-export { Loader };
-export default LoaderDemo;
+export { Loader, LoaderDemo };
+export default Loader;

@@ -144,19 +144,19 @@ export default function Footer() {
             </p>
 
             <div className="flex items-center gap-6">
-              <a
-                href="#privacy"
+              <Link
+                to="/privacy"
                 className="text-xs font-mono text-surface-400 dark:text-surface-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
                 Privacy
-              </a>
+              </Link>
               <div className="w-px h-4 bg-surface-200 dark:bg-white/10" />
-              <a
-                href="#terms"
+              <Link
+                to="/terms"
                 className="text-xs font-mono text-surface-400 dark:text-surface-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
               >
                 Terms
-              </a>
+              </Link>
             </div>
           </motion.div>
           <LoopSlider />
