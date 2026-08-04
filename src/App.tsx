@@ -1,9 +1,12 @@
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
 import { AuthProvider, useAuth } from '@/lib/auth';
 import { ProfileProvider } from '@/lib/profile';
 import { useTheme } from '@/hooks/useTheme';
 import Navbar from '@/components/layout/Navbar';
 import Footer from '@/components/layout/Footer';
+import ScrollProgress from '@/components/layout/ScrollProgress';
+import { SmoothScrollProvider } from '@/components/layout/SmoothScrollProvider';
 import HomePage from '@/pages/HomePage';
 import ProjectsPage from '@/pages/ProjectsPage';
 import ProjectDetailPage from '@/pages/ProjectDetailPage';
@@ -25,7 +28,6 @@ import UnsubscribePage from '@/pages/UnsubscribePage';
 import LeadVerifyPage from '@/pages/LeadVerifyPage';
 import MeetingPage from '@/pages/MeetingPage';
 import AdminMeetingPage from '@/pages/AdminMeetingPage';
-import { useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import AdminSubscribers from '@/components/admin/AdminSubscribeers';
 
@@ -36,16 +38,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
-  return null;
-}
-
 function Layout({ children }: { children: React.ReactNode }) {
   const { dark, toggle } = useTheme();
   return (
     <div className="min-h-screen flex flex-col">
+      <ScrollProgress />
       <Navbar dark={dark} toggleTheme={toggle} />
       <main className="flex-1">{children}</main>
       <Footer />
@@ -65,11 +62,11 @@ function TrackPageView() {
 export default function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <ProfileProvider>
-          <ScrollToTop />
-          <TrackPageView />
-          <Routes>
+      <SmoothScrollProvider>
+        <AuthProvider>
+          <ProfileProvider>
+            <TrackPageView />
+            <Routes>
             {/* Public routes */}
             <Route path="/" element={<Layout><HomePage /></Layout>} />
             <Route path="/projects" element={<Layout><ProjectsPage /></Layout>} />
@@ -103,9 +100,10 @@ export default function App() {
 
             {/* Fallback */}
             <Route path="*" element={<Navigate to="/" replace />} />
-          </Routes>
-        </ProfileProvider>
-      </AuthProvider>
+            </Routes>
+          </ProfileProvider>
+        </AuthProvider>
+      </SmoothScrollProvider>
     </BrowserRouter>
   );
 }

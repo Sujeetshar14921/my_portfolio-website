@@ -4,6 +4,7 @@ import { Project } from '@/types';
 import ProjectCard from './ProjectCard';
 import Pagination from '../Pagination/pagination'; // Apne folder path ke hisab se import path check kar lein
 import Loader from '../Loader/loader';
+import { useSmoothScroll } from '../layout/SmoothScrollProvider';
 
 interface ProjectsProps {
   projects: Project[];
@@ -22,6 +23,7 @@ const ITEMS_PER_PAGE = 4; // Par page dikhane wale projects ki sankhya
 export default function ProjectsSection({ projects }: ProjectsProps) {
   const [activeCategory, setActiveCategory] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const { scrollToSection } = useSmoothScroll();
 
   // Filter projects by category
   const filtered = activeCategory === 'all'
@@ -41,7 +43,7 @@ export default function ProjectsSection({ projects }: ProjectsProps) {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    document.getElementById('projects')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    scrollToSection('projects');
   };
 
   return (

@@ -2,6 +2,9 @@ import { motion } from 'framer-motion';
 import { ArrowLeft, Clock, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { BlogPost } from '@/types';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import PageSeo from '@/components/seo/PageSeo';
 
 interface BlogPostDetailProps {
   post: BlogPost;
@@ -15,6 +18,26 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
   return (
     <div className="pt-24 section-padding">
       <div className="w-full md:px-12 lg:px-20 ">
+        <PageSeo
+          title={`${post.title} | Sujeet Sharma`}
+          description={post.excerpt || post.title}
+          canonicalPath={`/blog/${post.slug}`}
+          type="article"
+          image={post.cover_image || undefined}
+          schema={{
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: post.title,
+            description: post.excerpt || post.title,
+            image: post.cover_image ? [post.cover_image] : ['https://www.sujeetsharma.in/og-image.jpg'],
+            url: `https://www.sujeetsharma.in/blog/${post.slug}`,
+            datePublished: post.published_at,
+            author: {
+              '@type': 'Person',
+              name: 'Sujeet Sharma',
+            },
+          }}
+        />
         <Link to="/blog" className="inline-flex items-center gap-2 text-sm text-surface-500 hover:text-primary-600 mb-8 transition-colors">
           <ArrowLeft size={16} /> Back to Blog
         </Link>
@@ -52,8 +75,12 @@ export default function BlogPostDetail({ post }: BlogPostDetailProps) {
           <h1 className="text-3xl md:text-4xl font-bold mb-8">{post.title}</h1>
 
           {/* Content */}
-          <div className="prose-custom">
-            <div dangerouslySetInnerHTML={{ __html: post.content.replace(/\\n/g, '\n') }} />
+          <div className="prose-custom content-width max-w-none">
+            {post.content_type === 'markdown' ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{post.content}</ReactMarkdown>
+            ) : (
+              <div dangerouslySetInnerHTML={{ __html: post.content.replace(/\n/g, '\n') }} />
+            )}
           </div>
         </motion.div>
       </div>

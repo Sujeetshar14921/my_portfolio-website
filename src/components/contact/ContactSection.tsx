@@ -20,9 +20,22 @@ const inquiryType = 'client' as const;
 export default function ContactSection({ profile }: ContactProps) {
   const [form, setForm] = useState({ name: '', email: '', message: '', phone: '', company: '', budget: '', service: '' });
   const [status, setStatus] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+  const [errors, setErrors] = useState<Partial<Record<keyof typeof form, string>>>({});
+
+  const validate = () => {
+    const nextErrors: Partial<Record<keyof typeof form, string>> = {};
+
+    if (!form.name.trim()) nextErrors.name = 'Name is required.';
+    if (!form.email.trim()) nextErrors.email = 'Email is required.';
+    if (!form.message.trim()) nextErrors.message = 'Please add a short message.';
+
+    setErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!validate()) return;
     setStatus('sending');
 
     const token = randomToken();
@@ -62,6 +75,7 @@ export default function ContactSection({ profile }: ContactProps) {
 
     setStatus('sent');
     setForm({ name: '', email: '', message: '', phone: '', company: '', budget: '', service: '' });
+    setErrors({});
   };
 
   const update = (key: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) =>
@@ -114,6 +128,7 @@ export default function ContactSection({ profile }: ContactProps) {
             whileInView={{ opacity: 1, x: 0 }}
             viewport={{ once: true }}
             className="lg:col-span-3 relative rounded-2xl border border-surface-200 dark:border-white/10 bg-white/70 dark:bg-surface-900/60 backdrop-blur-sm p-6 md:p-8 space-y-7 overflow-hidden"
+            aria-labelledby="contact-heading"
           >
             {/* IDE-style corner brackets to echo the site's signature detail */}
             <span className="pointer-events-none absolute top-3 left-3 w-5 h-5 border-t-2 border-l-2 border-primary-600/30 dark:border-primary-400/30 rounded-tl-md" />
@@ -130,7 +145,10 @@ export default function ContactSection({ profile }: ContactProps) {
                   onChange={update('name')}
                   className={inputClass}
                   placeholder="Your name"
+                  aria-invalid={!!errors.name}
+                  aria-describedby={errors.name ? 'contact-name-error' : undefined}
                 />
+                {errors.name && <p id="contact-name-error" className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.name}</p>}
               </div>
               <div className={fieldWrap}>
                 <label className={labelClass}>Email</label>
@@ -142,7 +160,10 @@ export default function ContactSection({ profile }: ContactProps) {
                   onChange={update('email')}
                   className={inputClass}
                   placeholder="you@example.com"
+                  aria-invalid={!!errors.email}
+                  aria-describedby={errors.email ? 'contact-email-error' : undefined}
                 />
+                {errors.email && <p id="contact-email-error" className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.email}</p>}
               </div>
             </div>
 
@@ -213,14 +234,17 @@ export default function ContactSection({ profile }: ContactProps) {
                 onChange={update('message')}
                 className="w-full bg-transparent border-b border-surface-200 dark:border-white/10 pb-2.5 text-sm text-surface-900 dark:text-white placeholder:text-surface-400 dark:placeholder:text-surface-600 focus:border-primary-600 dark:focus:border-primary-400 outline-none transition-colors resize-none"
                 placeholder="Tell me about your project..."
+                aria-invalid={!!errors.message}
+                aria-describedby={errors.message ? 'contact-message-error' : undefined}
               />
+              {errors.message && <p id="contact-message-error" className="mt-2 text-xs text-red-600 dark:text-red-400">{errors.message}</p>}
             </div>
 
             <div className="flex items-center gap-4">
               <button
                 type="submit"
                 disabled={status === 'sending'}
-                className="flex items-center justify-center gap-2 px-6 py-3 border rounded-lg border-surface-900 dark:border-white text-surface-900 dark:text-white text-xs font-mono uppercase tracking-wider hover:bg-surface-900 hover:text-white dark:hover:bg-white dark:hover:text-surface-900 transition-colors disabled:opacity-50"
+                className="flex items-center justify-center gap-2 px-6 py-3 border rounded-lg border-surface-900 dark:border-white text-surface-900 dark:text-white text-xs font-mono uppercase tracking-wider hover:bg-surface-900 hover:text-white dark:hover:bg-white dark:hover:text-surface-900 transition-colors disabled:opacity-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400"
               >
                 <Send size={14} className={status === 'sending' ? 'animate-pulse' : ''} />
                 {status === 'sending' ? 'Sending...' : status === 'sent' ? 'Sent' : 'Send message'}
@@ -266,7 +290,7 @@ export default function ContactSection({ profile }: ContactProps) {
             viewport={{ once: true }}
             className="lg:col-span-2"
           >
-            <p className="text-xs font-mono uppercase tracking-wider text-surface-400 dark:text-surface-600 mb-4">
+            <p id="contact-heading" className="text-xs font-mono uppercase tracking-wider text-surface-400 dark:text-surface-600 mb-4">
               Or reach me directly
             </p>
             <div className="rounded-2xl border border-surface-200 dark:border-white/10 bg-white/70 dark:bg-surface-900/60 backdrop-blur-sm divide-y divide-surface-200 dark:divide-white/10 overflow-hidden">

@@ -4,6 +4,7 @@ import { BlogPost } from "@/types";
 import BlogCard from "./BlogCard";
 import Pagination from "../Pagination/pagination";
 import Loader from "../Loader/loader";
+import { useSmoothScroll } from '../layout/SmoothScrollProvider';
 
 interface BlogSectionProps {
   posts: BlogPost[];
@@ -14,6 +15,7 @@ const POSTS_PER_PAGE = 3;
 export default function BlogSection({ posts }: BlogSectionProps) {
   const [activeTag, setActiveTag] = useState("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const { scrollToSection } = useSmoothScroll();
 
   const allTags = useMemo(
     () => [...new Set(posts.flatMap((p) => p.tags))],
@@ -39,11 +41,7 @@ export default function BlogSection({ posts }: BlogSectionProps) {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-
-    document.getElementById("blog")?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
+    scrollToSection('blog');
   };
 
   return (

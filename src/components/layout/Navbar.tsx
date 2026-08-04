@@ -29,11 +29,14 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
   useEffect(() => setOpen(false), [location]);
 
   return (
-    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-lg' : 'bg-transparent'}`}>
+    <nav
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'glass shadow-lg backdrop-blur-xl' : 'bg-transparent'}`}
+      aria-label="Primary navigation"
+    >
       <div className="w-full flex items-center justify-between h-20 px-4 sm:px-8 md:px-12 lg:px-20 xl:px-32 2xl:px-35">
         <Link
           to="/"
-          className="group font-black uppercase tracking-tight transition-transform duration-300 hover:scale-105"
+          className="group font-black uppercase tracking-tight transition-transform duration-300 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400 rounded-sm"
           style={{
             fontFamily: "'Clash Display', 'Sora', sans-serif",
             letterSpacing: "-0.02em",
@@ -52,7 +55,8 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
             <Link
               key={link.to}
               to={link.to}
-              className={`text-sm font-medium transition-colors hover:text-primary-600 dark:hover:text-primary-400 ${location.pathname === link.to ? 'text-primary-400 dark:text-primary-600' : 'text-surface-600 dark:text-surface-400'
+              aria-current={location.pathname === link.to ? 'page' : undefined}
+              className={`text-sm font-medium transition-colors hover:text-primary-600 dark:hover:text-primary-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400 rounded-sm ${location.pathname === link.to ? 'text-primary-400 dark:text-primary-600' : 'text-surface-600 dark:text-surface-400'
                 }`}
             >
               {link.label}
@@ -60,8 +64,9 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
           ))}
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+            className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400"
             aria-label="Toggle theme"
+            type="button"
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
@@ -71,15 +76,19 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
         <div className="flex items-center gap-2 md:hidden">
           <button
             onClick={toggleTheme}
-            className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+            className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400"
             aria-label="Toggle theme"
+            type="button"
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
           <button
             onClick={() => setOpen(!open)}
-            className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+            className="p-2 rounded-lg hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400"
             aria-label="Toggle menu"
+            aria-expanded={open}
+            aria-controls="mobile-navigation"
+            type="button"
           >
             {open ? <X size={20} /> : <Menu size={20} />}
           </button>
@@ -90,6 +99,7 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
       <AnimatePresence>
         {open && (
           <motion.div
+            id="mobile-navigation"
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
@@ -100,7 +110,8 @@ export default function Navbar({ dark, toggleTheme }: NavbarProps) {
                 <Link
                   key={link.to}
                   to={link.to}
-                  className={`text-sm font-medium transition-colors ${location.pathname === link.to ? 'text-primary-600 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400'
+                  aria-current={location.pathname === link.to ? 'page' : undefined}
+                  className={`text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 dark:focus-visible:ring-primary-400 rounded-sm ${location.pathname === link.to ? 'text-primary-600 dark:text-primary-400' : 'text-surface-600 dark:text-surface-400'
                     }`}
                 >
                   {link.label}

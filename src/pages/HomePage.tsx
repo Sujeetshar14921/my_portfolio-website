@@ -9,6 +9,7 @@ import BlogSection from '@/components/blog/BlogSection';
 import TestimonialsSection from '@/components/ui/TestimonialsSection';
 import ContactSection from '@/components/contact/ContactSection';
 import NewsletterSection from '@/components/ui/NewsletterSection';
+import PageSeo from '@/components/seo/PageSeo';
 
 export default function HomePage() {
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -38,6 +39,23 @@ export default function HomePage() {
 
   return (
     <>
+      <PageSeo
+        title="Sujeet Sharma | Full Stack Developer"
+        description="Portfolio of Sujeet Sharma featuring full stack development projects, technical blogs, and freelance web development services."
+        canonicalPath="/"
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'Person',
+          name: 'Sujeet Sharma',
+          url: 'https://www.sujeetsharma.in/',
+          jobTitle: 'Full Stack Developer',
+          image: 'https://www.sujeetsharma.in/og-image.jpg',
+          sameAs: [
+            'https://github.com/Sujeetshar14921',
+            'https://www.linkedin.com/in/sujeet-sharma-13090326b',
+          ],
+        }}
+      />
       <HeroSection profile={profile} />
       <AboutSection profile={profile} />
       <SkillsSection skills={skills} />

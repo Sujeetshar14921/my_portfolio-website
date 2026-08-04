@@ -1,10 +1,11 @@
 import { motion } from "framer-motion";
-import { ArrowLeft, ExternalLink, FileText, Download } from "lucide-react";
+import { ArrowLeft, ExternalLink, FileText } from "lucide-react";
 import { GitHubIcon } from "@/components/ui/BrandIcons";
 import { Link, useParams } from "react-router-dom";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Project } from "@/types";
+import PageSeo from '@/components/seo/PageSeo';
 
 interface ProjectDetailProps {
   projects: Project[];
@@ -41,6 +42,25 @@ export default function ProjectDetail({ projects }: ProjectDetailProps) {
   return (
     <div className="pt-24 section-padding">
       <div className="w-full md:px-12 lg:px-20">
+        <PageSeo
+          title={`${project.title} | Sujeet Sharma`}
+          description={project.description || project.full_description || project.title}
+          canonicalPath={`/projects/${project.slug}`}
+          type="article"
+          image={project.image_url || undefined}
+          schema={{
+            '@context': 'https://schema.org',
+            '@type': 'CreativeWork',
+            name: project.title,
+            description: project.description || project.full_description || project.title,
+            url: `https://www.sujeetsharma.in/projects/${project.slug}`,
+            image: project.image_url ? [project.image_url] : ['https://www.sujeetsharma.in/og-image.jpg'],
+            author: {
+              '@type': 'Person',
+              name: 'Sujeet Sharma',
+            },
+          }}
+        />
         <Link
           to="/projects"
           className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-wider text-surface-400 dark:text-surface-500 hover:text-primary-600 dark:hover:text-primary-400 transition-colors mb-10"
@@ -93,7 +113,7 @@ export default function ProjectDetail({ projects }: ProjectDetailProps) {
               </h1>
 
               {/* description */}
-              <div className="prose-custom">
+              <div className="prose-custom content-width max-w-none">
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{project.full_description || ''}</ReactMarkdown>
               </div>
 

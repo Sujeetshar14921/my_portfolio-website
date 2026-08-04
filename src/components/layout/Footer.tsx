@@ -4,11 +4,11 @@ import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import LoopSlider from '../ui/LoopSlider';
+import { useSmoothScroll } from './SmoothScrollProvider';
 
 export default function Footer() {
   const [scrollHover, setScrollHover] = useState(false);
-
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const { scrollToTop } = useSmoothScroll();
 
   return (
     <footer className="w-full bg-white dark:bg-surface-950 border-t border-surface-200 dark:border-white/10 transition-colors duration-300">
@@ -108,11 +108,12 @@ export default function Footer() {
                 Back to Top
               </span>
               <motion.button
-                onClick={scrollToTop}
+                onClick={() => scrollToTop()}
                 onMouseEnter={() => setScrollHover(true)}
                 onMouseLeave={() => setScrollHover(false)}
                 className="group relative p-3 rounded-full mt-20 border border-surface-200 dark:border-white/10 text-surface-600 dark:text-surface-400 hover:border-primary-600 dark:hover:border-primary-400 hover:text-primary-600 dark:hover:text-primary-400 transition-all duration-300"
                 aria-label="Scroll to top"
+                type="button"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >

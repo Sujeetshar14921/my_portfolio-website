@@ -1,0 +1,18 @@
+{
+  "name": "Sujeet Sharma",
+  "short_name": "Sujeet",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "48x48 72x72 96x96 128x128 192x192 256x256",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "description": "Portfolio website of Sujeet Sharma featuring full stack development projects, technical blogs, web development tutorials, and freelance services.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#F8FAFC",
+  "theme_color": "#0F172A"
+}
