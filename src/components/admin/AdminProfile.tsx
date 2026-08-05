@@ -7,6 +7,7 @@ import {
   Trophy, Upload, X, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import ImageUpload from '@/components/ui/ImageUpload';
+import FileUpload from '@/components/ui/FileUpload';
 
 const EMPTY_EXP: ExperienceEntry = { company: '', role: '', period: '', description: '' };
 const EMPTY_EDU: EducationEntry = { institution: '', degree: '', year: '' };
@@ -33,7 +34,7 @@ export default function AdminProfile() {
         .then(({ data }) => {
         setProfile(data || {
           name: '', role: '', tagline: '', bio: '', photo_url: '',
-          resume_url: '', linkedin_url: '', github_url: '', email: '',
+          resume_url: '', hero_music_url: '', linkedin_url: '', github_url: '', email: '',
           x_url: '', facebook_url: '', instagram_url: '', youtube_url: '',
           education: [], experience: [], achievements: [],
         });
@@ -256,22 +257,36 @@ export default function AdminProfile() {
             ) : (
               <p className="text-sm text-surface-400">No resume uploaded yet.</p>
             )}
-            <div className="flex gap-3">
-              <button
-                onClick={() => resumeRef.current?.click()}
-                disabled={resumeUploading}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg border border-surface-200 dark:border-surface-700 text-sm font-medium hover:border-primary-400 dark:hover:border-primary-500 transition-colors disabled:opacity-50"
-              >
-                {resumeUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
-                Upload PDF
-              </button>
-              <div className="flex-1">
-                <label className="block text-xs text-surface-500 mb-1">Or paste a URL</label>
-                <input
-                  value={profile?.resume_url || ''}
-                  onChange={e => set('resume_url', e.target.value)}
-                  className={inputCls}
-                  placeholder="https://..."
+            <div className="flex flex-col gap-6">
+              <div className="flex gap-3 flex-wrap">
+                <button
+                  onClick={() => resumeRef.current?.click()}
+                  disabled={resumeUploading}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg border border-surface-200 dark:border-surface-700 text-sm font-medium hover:border-primary-400 dark:hover:border-primary-500 transition-colors disabled:opacity-50"
+                >
+                  {resumeUploading ? <Loader2 size={14} className="animate-spin" /> : <Upload size={14} />}
+                  Upload PDF
+                </button>
+                <div className="flex-1 min-w-[240px]">
+                  <label className="block text-xs text-surface-500 mb-1">Or paste a URL</label>
+                  <input
+                    value={profile?.resume_url || ''}
+                    onChange={e => set('resume_url', e.target.value)}
+                    className={inputCls}
+                    placeholder="https://..."
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={labelCls}>Hero Music Upload</label>
+                <FileUpload
+                  value={profile?.hero_music_url || ''}
+                  onChange={url => set('hero_music_url', url)}
+                  folder="hero-music"
+                  fileType="audio"
+                  label="Upload hero song"
+                  accept="audio/*"
                 />
               </div>
             </div>

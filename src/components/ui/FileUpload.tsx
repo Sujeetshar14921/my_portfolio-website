@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Upload, X, FileText, Loader2 } from 'lucide-react';
+import { Upload, X, FileText, Loader2, Music } from 'lucide-react';
 
 interface FileUploadProps {
   value: string;
@@ -8,7 +8,7 @@ interface FileUploadProps {
   folder?: string;
   accept?: string;
   label?: string;
-  fileType?: 'image' | 'pdf';
+  fileType?: 'image' | 'pdf' | 'audio';
 }
 
 export default function FileUpload({
@@ -23,8 +23,18 @@ export default function FileUpload({
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
 
-  const defaultAccept = fileType === 'pdf' ? '.pdf' : 'image/*';
+  const defaultAccept = fileType === 'pdf'
+    ? '.pdf'
+    : fileType === 'audio'
+      ? '.mp3,.wav,.ogg,.m4a,.aac,audio/*'
+      : 'image/*';
   const actualAccept = accept || defaultAccept;
+
+  const normalizePublicUrl = (url: string) => {
+    const match = url.match(/\/storage\/v1\/object\/(?:public\/)?media\/(.+)$/);
+    if (!match) return url;
+    return `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/media/${encodeURI(match[1])}`;
+  };
 
   const handleFile = async (file: File) => {
     setError('');
@@ -39,13 +49,14 @@ export default function FileUpload({
     });
 
     if (uploadErr) {
-      setError(uploadErr.message);
+      setError(uploadErr.message || 'Upload failed. Please try a different audio file.');
       setUploading(false);
       return;
     }
 
     const { data } = supabase.storage.from('media').getPublicUrl(path);
-    onChange(data.publicUrl);
+    const publicUrl = normalizePublicUrl(data.publicUrl);
+    onChange(publicUrl);
     setUploading(false);
   };
 

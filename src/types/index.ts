@@ -6,6 +6,7 @@ export interface Profile {
   bio: string;
   photo_url: string;
   resume_url: string;
+  hero_music_url: string;
   linkedin_url: string;
   github_url: string;
   email: string;
