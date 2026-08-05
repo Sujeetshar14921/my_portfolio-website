@@ -56,12 +56,16 @@ export default function HomePage() {
           '@type': 'Person',
           name: 'Sujeet Sharma',
           url: 'https://www.sujeetsharma.in/',
-          jobTitle: 'Full Stack Developer',
+          jobTitle: 'AI Full Stack Developer',
           image: 'https://www.sujeetsharma.in/og-image.jpg',
           sameAs: [
             'https://github.com/Sujeetshar14921',
-            'https://www.linkedin.com/in/sujeet-sharma-13090326b',
-          ],
+            profile?.linkedin_url || 'https://www.linkedin.com/in/sujeet-sharma-13090326b',
+            profile?.x_url || 'https://x.com/SUJEETSHAR14921',
+            profile?.facebook_url || 'https://www.facebook.com/profile.php?id=100084628323690',
+            profile?.instagram_url || 'https://www.instagram.com/sujeetshar14921/',
+            profile?.youtube_url || undefined,
+          ].filter(Boolean),
         }}
       />
       <HeroSection profile={profile} />

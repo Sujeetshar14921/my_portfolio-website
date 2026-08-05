@@ -9,7 +9,10 @@ export interface Profile {
   linkedin_url: string;
   github_url: string;
   email: string;
-  calendly_url: string;
+  x_url: string;
+  facebook_url: string;
+  instagram_url: string;
+  youtube_url: string;
   education: EducationEntry[];
   experience: ExperienceEntry[];
   achievements: string[];

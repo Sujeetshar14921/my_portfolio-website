@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Send, Mail, Calendar, User, AtSign, Phone, Building2, Wallet, Wrench, CheckCircle2, AlertCircle } from 'lucide-react';
-import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons';
+import { GitHubIcon, LinkedInIcon, XIcon, FacebookIcon, InstagramIcon, YouTubeIcon } from '@/components/ui/BrandIcons';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/types';
 
@@ -298,7 +298,10 @@ export default function ContactSection({ profile }: ContactProps) {
                 { icon: Mail, label: 'Email', value: profile?.email || 'alex@alexmorgan.dev', href: `mailto:${profile?.email || 'alex@alexmorgan.dev'}` },
                 { icon: LinkedInIcon, label: 'LinkedIn', value: 'Connect with me', href: profile?.linkedin_url || '#' },
                 { icon: GitHubIcon, label: 'GitHub', value: 'View my code', href: profile?.github_url || '#' },
-                ...(profile?.calendly_url ? [{ icon: Calendar, label: 'Book a Call', value: 'Schedule on Calendly', href: profile.calendly_url }] : []),
+                ...(profile?.x_url ? [{ icon: XIcon, label: 'X', value: 'Follow on X', href: profile.x_url }] : []),
+                ...(profile?.facebook_url ? [{ icon: FacebookIcon, label: 'Facebook', value: 'Visit Facebook', href: profile.facebook_url }] : []),
+                ...(profile?.instagram_url ? [{ icon: InstagramIcon, label: 'Instagram', value: 'Visit Instagram', href: profile.instagram_url }] : []),
+                ...(profile?.youtube_url ? [{ icon: YouTubeIcon, label: 'YouTube', value: 'Watch on YouTube', href: profile.youtube_url }] : []),
               ].map(item => (
                 <a
                   key={item.label}

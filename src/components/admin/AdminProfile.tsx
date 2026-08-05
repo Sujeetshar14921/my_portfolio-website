@@ -30,11 +30,12 @@ export default function AdminProfile() {
       .select('*')
       .limit(1)
       .maybeSingle()
-      .then(({ data }) => {
+        .then(({ data }) => {
         setProfile(data || {
           name: '', role: '', tagline: '', bio: '', photo_url: '',
           resume_url: '', linkedin_url: '', github_url: '', email: '',
-          calendly_url: '', education: [], experience: [], achievements: [],
+          x_url: '', facebook_url: '', instagram_url: '', youtube_url: '',
+          education: [], experience: [], achievements: [],
         });
         setLoading(false);
       });
@@ -225,7 +226,10 @@ export default function AdminProfile() {
                 { key: 'email', label: 'Email', placeholder: 'you@example.com' },
                 { key: 'linkedin_url', label: 'LinkedIn URL', placeholder: 'https://linkedin.com/in/...' },
                 { key: 'github_url', label: 'GitHub URL', placeholder: 'https://github.com/...' },
-                { key: 'calendly_url', label: 'Calendly URL', placeholder: 'https://calendly.com/...' },
+                { key: 'x_url', label: 'X (Twitter) URL', placeholder: 'https://x.com/yourhandle' },
+                { key: 'facebook_url', label: 'Facebook URL', placeholder: 'https://www.facebook.com/yourprofile' },
+                { key: 'instagram_url', label: 'Instagram URL', placeholder: 'https://www.instagram.com/yourhandle' },
+                { key: 'youtube_url', label: 'YouTube URL', placeholder: 'https://www.youtube.com/channel/...' },
               ].map(f => (
                 <div key={f.key}>
                   <label className={labelCls}>{f.label}</label>

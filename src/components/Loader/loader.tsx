@@ -102,9 +102,9 @@ const Loader = ({ theme, fullscreen = true, label = 'Loading' }: LoaderProps) =>
 
         .orbit {
           position: relative;
-          width: 96px;
-          height: 96px;
-          perspective: 900px;
+          width: 44px;
+          height: 44px;
+          perspective: 700px;
         }
 
         .orbit-core {

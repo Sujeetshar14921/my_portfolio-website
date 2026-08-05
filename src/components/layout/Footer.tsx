@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
-import { Mail, ArrowUp } from 'lucide-react';
-import { GitHubIcon, LinkedInIcon } from '@/components/ui/BrandIcons';
+import { Mail, ArrowUp,} from 'lucide-react';
+import { GitHubIcon, LinkedInIcon, XIcon } from '@/components/ui/BrandIcons';
 import { motion } from 'framer-motion';
 import { useState } from 'react';
 import LoopSlider from '../ui/LoopSlider';
@@ -85,6 +85,14 @@ export default function Footer() {
                     className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
                   >
                     <LinkedInIcon size={14} /> LinkedIn
+                  </a>
+                  <a
+                    href="https://x.com/SUJEETSHAR14921"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-surface-600 dark:text-surface-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors flex items-center gap-2"
+                  >
+                    <XIcon size={14} /> X
                   </a>
                   <a
                     href="mailto:sujeetsharmadc56@gmail.com"
